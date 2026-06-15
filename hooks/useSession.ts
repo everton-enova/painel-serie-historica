@@ -24,6 +24,7 @@ export function useSession() {
         const sessao: SessaoSalva = JSON.parse(bruto);
         const agora = new Date().getTime();
         if (agora - sessao.timestamp < TEMPO_SESSAO) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of localStorage session on mount
           setUsuarioLogado(sessao.nome);
         } else {
           localStorage.removeItem(CHAVE_SESSAO);
