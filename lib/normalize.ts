@@ -1,3 +1,14 @@
+export function removerAcentos(texto: string): string {
+  return texto
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
+export function correspondeRede(redeBloco: string, redesAtivas: string[]): boolean {
+  const redeUpper = removerAcentos(String(redeBloco).toUpperCase()).trim();
+  return redesAtivas.some((r) => redeUpper.includes(removerAcentos(r)));
+}
+
 export function normalizarTexto(texto: unknown): string {
   if (!texto) return "";
   let t = String(texto).toUpperCase();
