@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- 1. CONFIGURAÇÕES GERAIS --- */
+    :root {
+      --primary-color: #002060;
+      --bg-color: #f0f2f5;
+    }
+
+    body { 
+      background-color: var(--bg-color); 
+      font-family: 'Inter', sans-serif; 
+      font-size: 9pt; 
+      color: #333;
+      margin: 0;
+      padding-bottom: 40px;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* --- 2. TELA DE LOGIN --- */
+    #loginScreen { 
+      height: 100vh; display: flex; align-items: center; justify-content: center; 
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); 
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 9999;
+      padding: 20px;
+    }
+    .card-login { 
+      width: 100%; max-width: 400px; padding: 40px; border-radius: 15px; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1); background: white; 
+    }
+    
+    /* --- 3. CONTAINER A4 (VISUALIZAÇÃO DESKTOP) --- */
+    .nota-tecnica {
+      background: white; 
+      width: 210mm;
+      min-height: 297mm;
+      padding: 15mm;
+      margin: 30px auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15); 
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* --- 4. CABEÇALHO DA NOTA --- */
+    .header-modern { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 3px solid var(--primary-color); 
+      padding-bottom: 15px; 
+      margin-bottom: 25px; 
+    }
+    
+    .header-logo img { 
+      height: 70px !important; 
+      width: auto !important;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header-info { text-align: right; }
+    .header-title { 
+      font-size: 16pt; font-weight: 800; color: var(--primary-color); 
+      text-transform: uppercase; margin: 0; line-height: 1.2;
+    }
+    .header-meta { font-size: 8pt; color: #666; margin-top: 5px; }
+
+    /* --- 5. DADOS DA ESCOLA/MUNICÍPIO (CARD) --- */
+    .school-card { 
+      background: #f8f9fa; 
+      border-left: 5px solid var(--primary-color); 
+      padding: 15px; 
+      margin-bottom: 30px; 
+      border-radius: 0 4px 4px 0; 
+    }
+    .school-name { 
+      font-size: 11pt; font-weight: 700; color: #000; 
+      margin-bottom: 8px; text-transform: uppercase; 
+    }
+    .school-details { 
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 9pt; color: #444; 
+    }
+    .school-label { font-weight: 600; color: #002060; margin-right: 5px; }
+
+    /* --- 6. TABELAS E ESTILOS --- */
+    .section-title { 
+      font-size: 10pt; font-weight: 700; color: var(--primary-color); 
+      text-transform: uppercase; border-bottom: 1px solid #ddd; 
+      padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; 
+    }
+
+    .modern-table { 
+      width: 100%; border-collapse: collapse; margin-bottom: 5px; font-size: 8.5pt; 
+      page-break-inside: avoid;
+    }
+    
+    .modern-table thead th { 
+      background-color: var(--primary-color) !important; 
+      color: white !important; 
+      text-transform: uppercase; font-size: 8pt; font-weight: 600; 
+      padding: 8px 5px; text-align: center; border: none;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+      white-space: nowrap;
+    }
+    
+    .modern-table thead tr.sub-header th {
+      background-color: #e9ecef !important; color: #333 !important;
+      font-weight: 700; border-bottom: 2px solid #ccc;
+    }
+
+    .modern-table tbody td { 
+      padding: 6px 5px; border-bottom: 1px solid #e0e0e0; 
+      text-align: center; color: #333; vertical-align: middle;
+    }
+    
+    .cell-merged {
+      background-color: white; border-right: 1px solid #e0e0e0;
+      font-weight: 600; color: #000; vertical-align: middle;
+    }
+
+    .highlight-cell { 
+      font-weight: bold; color: var(--primary-color); background-color: #f0f4f8 !important; 
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    
+    /* === ESTILO DADOS PRELIMINARES (SABE 2025) === */
+    .row-preliminar td {
+      background-color: #fff8e1 !important;
+      border-bottom: 2px dashed #f9a825 !important;
+      font-style: italic;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .row-preliminar td:first-child {
+      border-left: 3px solid #f9a825 !important;
+    }
+    .badge-preliminar {
+      display: inline-block;
+      background-color: #f9a825;
+      color: #fff;
+      font-size: 6.5pt;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 4px;
+      vertical-align: middle;
+      letter-spacing: 0.3px;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    .nota-preliminar {
+      font-size: 7.5pt;
+      color: #e65100;
+      font-style: italic;
+      margin-top: 4px;
+      margin-bottom: 10px;
+      padding: 4px 8px;
+      background: #fff8e1;
+      border-left: 3px solid #f9a825;
+      border-radius: 0 4px 4px 0;
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+
+    /* Badges e Cores */
+    .badge-nivel { padding: 3px 8px; border-radius: 12px; font-size: 7.5pt; font-weight: 600; display: inline-block; min-width: 80px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .nv-abaixo { background-color: #ffebee; color: #c62828; }
+    .nv-basico { background-color: #fff3e0; color: #ef6c00; }
+    .nv-adequado { background-color: #e8eaf6; color: #283593; }
+    .nv-avancado { background-color: #e0f2f1; color: #00695c; }
+    .seta-up { color: #198754; font-weight: bold; -webkit-print-color-adjust: exact; }
+    .seta-down { color: #dc3545; font-weight: bold; -webkit-print-color-adjust: exact; }
+
+    .analysis-box { 
+      font-size: 9.5pt; line-height: 1.5; color: #333; 
+      background: #fff; text-align: justify; margin-bottom: 15px; 
+      padding: 5px; border: 1px dashed transparent;
+      transition: all 0.2s;
+    }
+    .analysis-box:hover { border-color: #ccc; background: #fafafa; cursor: text; }
+    .footer-mini { font-size: 7pt; color: #999; text-align: center; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px; }
+
+    /* --- 7. BARRA SUPERIOR E FILTROS --- */
+    .top-bar { 
+      background: white; padding: 10px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+      display: flex; justify-content: space-between; align-items: center; 
+      position: sticky; top: 0; z-index: 1000; flex-wrap: wrap; gap: 10px;
+    }
+    
+    .filter-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .action-group { display: flex; align-items: center; gap: 10px; }
+
+    /* ABAS de modo (Escola / Município / Documento) */
+    .mode-tabs {
+      display: flex;
+      gap: 0;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .mode-tab {
+      padding: 6px 16px;
+      font-size: 9pt;
+      font-weight: 700;
+      cursor: pointer;
+      background: white;
+      color: var(--primary-color);
+      border: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .mode-tab.active {
+      background: var(--primary-color);
+      color: white;
+    }
+    .mode-tab:not(.active):hover {
+      background: #e8edf4;
+    }
+
+    /* Checkboxes */
+    .checkbox-group { 
+      display: flex; 
+      gap: 30px;
+      padding: 10px 0; 
+      align-items: center;
+    }
+    .checkbox-item { display: flex; align-items: center; cursor: pointer; }
+    .checkbox-item input[type="checkbox"] {
+      width: 1.3em; height: 1.3em; margin: 0; margin-right: 8px; cursor: pointer; accent-color: var(--primary-color);
+    }
+    .checkbox-item label { font-size: 11pt; font-weight: bold; color: #333; cursor: pointer; margin: 0; padding-top: 2px; }
+
+    /* Sub-checkboxes de Rede (Saeb Municipal) */
+    .sub-checkbox-group {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      padding-left: 5px;
+    }
+    .sub-checkbox-item { display: flex; align-items: center; cursor: pointer; }
+    .sub-checkbox-item input[type="checkbox"] {
+      width: 1.1em; height: 1.1em; margin: 0; margin-right: 5px; cursor: pointer; accent-color: var(--primary-color);
+    }
+    .sub-checkbox-item label { font-size: 9pt; font-weight: 600; color: #555; cursor: pointer; margin: 0; padding-top: 1px; }
+
+    /* ================================================= */
+    /* --- ESTILOS DA ABA DOCUMENTO EDITÁVEL ---         */
+    /* ================================================= */
+    
+    /* Toolbar do editor */
+    .doc-toolbar {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      padding: 8px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+      position: sticky;
+      top: 52px;
+      z-index: 500;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .doc-toolbar .tb-sep {
+      width: 1px;
+      height: 24px;
+      background: #ddd;
+      margin: 0 6px;
+    }
+    .doc-toolbar button {
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #444;
+      line-height: 1;
+      transition: all 0.15s;
+      min-width: 30px;
+      text-align: center;
+    }
+    .doc-toolbar button:hover {
+      background: #e8edf4;
+      border-color: #ccc;
+    }
+    .doc-toolbar button.active {
+      background: var(--primary-color);
+      color: #fff;
+      border-color: var(--primary-color);
+    }
+    .doc-toolbar select {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 4px 6px;
+      font-size: 9pt;
+      color: #333;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    /* Área editável do documento */
+    .doc-editor-area {
+      background: white;
+      width: 210mm;
+      min-height: 297mm;
+      padding: 15mm;
+      margin: 0 auto 30px auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      box-sizing: border-box;
+      position: relative;
+    }
+    
+    .doc-body-editable {
+      min-height: 500px;
+      outline: none;
+      font-size: 10pt;
+      line-height: 1.7;
+      color: #333;
+    }
+    .doc-body-editable:focus {
+      outline: none;
+    }
+    /* Estilos dentro do editor */
+    .doc-body-editable h1 {
+      font-size: 14pt;
+      font-weight: 800;
+      color: var(--primary-color);
+      text-transform: uppercase;
+      margin: 20px 0 10px 0;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 5px;
+    }
+    .doc-body-editable h2 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin: 18px 0 8px 0;
+    }
+    .doc-body-editable h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #333;
+      margin: 14px 0 6px 0;
+    }
+    .doc-body-editable p {
+      margin: 0 0 8px 0;
+      text-align: justify;
+    }
+    .doc-body-editable ul, .doc-body-editable ol {
+      margin: 8px 0 8px 20px;
+      padding-left: 10px;
+    }
+    .doc-body-editable li {
+      margin-bottom: 4px;
+    }
+    .doc-body-editable table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 9pt;
+    }
+    .doc-body-editable table td,
+    .doc-body-editable table th {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    .doc-body-editable table th {
+      background: var(--primary-color);
+      color: #fff;
+      font-weight: 600;
+      font-size: 8.5pt;
+    }
+    .doc-body-editable blockquote {
+      border-left: 4px solid var(--primary-color);
+      margin: 12px 0;
+      padding: 8px 15px;
+      background: #f8f9fa;
+      font-style: italic;
+      color: #555;
+    }
+
+    /* Título editável do documento */
+    .doc-title-editable {
+      font-size: 16pt;
+      font-weight: 800;
+      color: var(--primary-color);
+      text-transform: uppercase;
+      border: 2px dashed transparent;
+      padding: 4px 8px;
+      margin: 0;
+      line-height: 1.2;
+      outline: none;
+      transition: border-color 0.2s;
+      min-width: 200px;
+      display: inline-block;
+    }
+    .doc-title-editable:hover,
+    .doc-title-editable:focus {
+      border-color: #aaa;
+      background: #fafafa;
+    }
+
+    /* Controles filtros do modo Documento (escondidos) */
+    .filtros-dados { transition: all 0.3s; }
+
+    /* Wrapper do editor para aplicar margem e toolbar juntos */
+    .doc-editor-wrapper {
+      max-width: 210mm;
+      margin: 30px auto 0 auto;
+    }
+
+    /* --- 8. RESPONSIVIDADE (MOBILE) --- */
+    @media screen and (max-width: 850px) {
+      .nota-tecnica, .doc-editor-area { width: 100%; margin: 0; padding: 10px; min-height: auto; box-shadow: none; }
+      .doc-editor-wrapper { margin: 10px auto 0 auto; }
+      .doc-toolbar { position: relative; top: 0; border-radius: 8px; margin-bottom: 0; }
+      
+      .header-modern { flex-direction: column; text-align: center; gap: 10px; margin-bottom: 15px; }
+      .header-info { text-align: center; width: 100%; }
+      .header-logo img { margin: 0 auto; height: 50px !important; }
+      .header-title { font-size: 12pt; }
+      .doc-title-editable { font-size: 12pt; }
+      
+      .top-bar { position: relative; padding: 10px; flex-direction: column; gap: 10px; border-bottom: 1px solid #ddd; }
+      
+      .filter-group { display: grid; grid-template-columns: 1fr auto; gap: 8px; width: 100%; }
+      .filter-group > div.fw-bold, .vr { display: none; }
+      
+      .mode-tabs { grid-column: 1 / -1; width: 100%; }
+      .mode-tab { flex: 1; text-align: center; }
+      
+      #searchInput { width: 100% !important; grid-column: 1; }
+      .filter-group button.btn-buscar { width: auto !important; grid-column: 2; padding: 0 20px; }
+      
+      .input-group { grid-column: 1 / -1; width: 100% !important; }
+      .checkbox-group { grid-column: 1 / -1; width: 100%; justify-content: center; flex-wrap: wrap; }
+      .sub-checkbox-group { grid-column: 1 / -1; width: 100%; justify-content: center; }
+      
+      .action-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 5px; }
+      .action-group span { display: none; }
+      
+      .table-responsive { display: block; width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; border: 1px solid #eee; }
+      .school-card { margin-bottom: 15px; }
+      .school-details { grid-template-columns: 1fr; gap: 2px; }
+    }
+
+    /* --- 9. IMPRESSÃO --- */
+    @media print {
+      @page { 
+        size: A4; 
+        margin-top: 15mm; 
+        margin-bottom: 15mm; 
+        margin-left: 0; 
+        margin-right: 0; 
+      }
+      
+      body { background-color: white; margin: 0; padding: 0; }
+      .top-bar, #loginScreen, .no-print, .doc-toolbar { display: none !important; }
+      
+      .nota-tecnica, .doc-editor-area { 
+        width: 210mm; min-height: 297mm; 
+        padding-top: 0;
+        padding-bottom: 0; 
+        padding-left: 15mm; padding-right: 15mm;
+        margin: 0 auto; box-shadow: none; border: none; 
+      }
+      
+      .doc-title-editable { border: none !important; background: none !important; padding: 0; }
+      
+      .analysis-box { border: none !important; padding: 0; }
+      tr { page-break-inside: avoid; }
+      .no-break { page-break-inside: avoid; }
+      .table-responsive { overflow: visible !important; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+    /* --- POPUP PERSONALIZADO --- */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45);
+      z-index: 99999;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: popupFadeIn 0.2s ease;
+    }
+    .popup-overlay.show { display: flex; }
+    @keyframes popupFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes popupSlideIn {
+      from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .popup-box {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 420px;
+      overflow: hidden;
+      animation: popupSlideIn 0.25s ease;
+    }
+    .popup-header {
+      padding: 20px 24px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .popup-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 20px;
+    }
+    .popup-icon.error { background: #fef2f2; color: #dc2626; }
+    .popup-icon.warning { background: #fffbeb; color: #d97706; }
+    .popup-icon.success { background: #f0fdf4; color: #16a34a; }
+    .popup-icon.info { background: #eff6ff; color: #2563eb; }
+    .popup-icon.input { background: #f0f0ff; color: #4f46e5; }
+    .popup-header-text h3 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
+    .popup-header-text p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: #666;
+    }
+    .popup-body {
+      padding: 16px 24px 4px;
+    }
+    .popup-body p {
+      margin: 0;
+      font-size: 13.5px;
+      color: #444;
+      line-height: 1.55;
+    }
+    .popup-input-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .popup-input-row label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .popup-input-row input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+    .popup-input-row input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(0,32,96,0.1);
+    }
+    .popup-footer {
+      padding: 16px 24px 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .popup-btn {
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+    .popup-btn:hover { filter: brightness(0.92); }
+    .popup-btn-cancel {
+      background: #f3f4f6;
+      color: #555;
+    }
+    .popup-btn-primary {
+      background: var(--primary-color);
+      color: white;
+    }
+    .popup-btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ===================== TELA DE LOGIN ===================== -->
+  <div id="loginScreen">
+    <div class="card-login text-center">
+      <h4 class="mb-4 fw-bold text-primary">PAINEL SÉRIE HISTÓRICA</h4>
+      <div class="mb-3 text-start">
+        <label class="form-label fw-bold small text-secondary">CPF do Colaborador</label>
+        <input type="text" id="cpfInput" class="form-control form-control-lg" placeholder="Apenas números"
+               onkeydown="if(event.key==='Enter') fazerLogin();">
+      </div>
+      <button id="btnLogin" onclick="fazerLogin()" class="btn btn-primary btn-lg w-100 mb-3">Entrar</button>
+      <div id="loginError" class="text-danger small fw-bold"></div>
+    </div>
+  </div>
+
+  <!-- ===================== TELA PRINCIPAL ===================== -->
+  <div id="mainScreen" style="display:none;">
+    
+    <div class="top-bar no-print">
+      <div class="filter-group">
+        <div class="fw-bold text-primary fs-5">PAINEL</div>
+        <div class="vr"></div>
+
+        <!-- ABAS: Escola / Município / Documento -->
+        <div class="mode-tabs">
+          <button class="mode-tab active" id="tabEscola" onclick="trocarModo('escola')">🏫 Escola</button>
+          <button class="mode-tab" id="tabMunicipio" onclick="trocarModo('municipio')">🏛️ Município</button>
+          <button class="mode-tab" id="tabDocumento" onclick="trocarModo('documento')">📝 Documento</button>
+        </div>
+        
+        <!-- Filtros de dados (visíveis apenas nos modos Escola/Município) -->
+        <div class="filtros-dados" id="filtrosDados">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <input type="text" id="searchInput" class="form-control form-control-sm" style="width: 180px;" placeholder="Código INEP"
+                   onkeydown="if(event.key==='Enter') buscar();">
+            <button class="btn btn-primary btn-sm btn-buscar" onclick="buscar()">Buscar</button>
+            
+            <div class="input-group input-group-sm" style="width: 140px;">
+              <span class="input-group-text">Nota Nº</span>
+              <input type="text" id="numNotaInput" class="form-control" placeholder="000" onkeyup="atualizarNumNota()">
+            </div>
+
+            <div class="checkbox-group">
+              <div class="checkbox-item">
+                <input type="checkbox" id="checkSabe" checked onchange="atualizarVisibilidade()">
+                <label for="checkSabe">SABE</label>
+              </div>
+              <div class="sub-checkbox-group" id="filtroRedeSabe" style="display:none;">
+                <div class="sub-checkbox-item">
+                  <input type="checkbox" id="checkSabeRedeMunicipal" checked onchange="filtrarRede()">
+                  <label for="checkSabeRedeMunicipal">Municipal</label>
+                </div>
+                <div class="sub-checkbox-item">
+                  <input type="checkbox" id="checkSabeRedeEstadual" checked onchange="filtrarRede()">
+                  <label for="checkSabeRedeEstadual">Estadual</label>
+                </div>
+              </div>
+
+              <span style="color:#ccc; font-size:14px;">|</span>
+
+              <div class="checkbox-item">
+                <input type="checkbox" id="checkSaeb" checked onchange="atualizarVisibilidade()">
+                <label for="checkSaeb">Saeb</label>
+              </div>
+              <div class="sub-checkbox-group" id="filtroRedeSaeb" style="display:none;">
+                <div class="sub-checkbox-item">
+                  <input type="checkbox" id="checkSaebRedePublica" checked onchange="filtrarRede()">
+                  <label for="checkSaebRedePublica">Pública</label>
+                </div>
+                <div class="sub-checkbox-item">
+                  <input type="checkbox" id="checkSaebRedeMunicipal" checked onchange="filtrarRede()">
+                  <label for="checkSaebRedeMunicipal">Municipal</label>
+                </div>
+                <div class="sub-checkbox-item">
+                  <input type="checkbox" id="checkSaebRedeEstadual" checked onchange="filtrarRede()">
+                  <label for="checkSaebRedeEstadual">Estadual</label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-group">
+        <span class="small text-muted me-2" style="white-space: nowrap;">Logado: <b id="userDisplay"></b></span>
+        <button class="btn btn-success btn-sm fw-bold" onclick="imprimirDocumento()">🖨️ PDF / IMPRIMIR</button>
+        <button class="btn btn-outline-danger btn-sm" onclick="sair()">Sair</button>
+      </div>
+    </div>
+
+    <div id="loading" class="text-center py-5" style="display:none;">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-2 fw-bold text-muted">Carregando dados...</div>
+    </div>
+
+    <!-- ===================== RELATÓRIO (Escola/Município) ===================== -->
+    <div id="relatorioArea" style="display:none;">
+      <div class="nota-tecnica" id="conteudoNota">
+        
+        <header class="header-modern">
+          <div class="header-logo">
+            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCABGANgDASIAAhEBAxEB/8QAHQABAAEEAwEAAAAAAAAAAAAAAggBBQcJAQMEAv/EAEkQAAEEAQMDAQMIBgUICwAAAAECAwQFBgAHEQgSIRMUIjEJFSMyQVFxgRY2UXWRsxkzQpKVGCRTVnJ20tMXNzhVV2J2goOhsv/EABwBAQACAwEBAQAAAAAAAAACBgEDBwUECP/EADURAAEDAwMBBQYDCQAAAAAAAAEAAhEDBAUGITESE0FRYXEHIjKBkaEIQpIUFRYkUrGywfD/2gAMAwEAAhEDEQA/ANqemmsJdXO7GXbS7XQpmAuRI2Q5PklTi1fOmRvaGK9ydIDZkra5HeEJ7iEk8FXbzyPGiLNumoI5z1Kbx7Prz/bRve/F8/ymNNoKqomTMeVXzqWTYS0xnnZcdtCI0hhAWlTa21k9x7VAgHXzuVvl1O7FZlmGB2G4kbPjhWPVG5Ts447FhSZNImeYtpAcQ19GD6fL7bqQFpDRSSedEU8NNQV3z6rd1Q3nuZ7T5e3CwmhybFsKqp0GlZtXJUyUpLtlIabIKnlNtyGGkNDwpYVx5159zd/t3tu8C23nzt98jgR8yy+dBsr652vTDnwIDMJSwgVZbK1D1Wir1O3kpWT9VOiKeWmtdsvrD6oKzbna/LqevZyo3uZXrLShRCvey/GIEUyW5bMdZKo7rrSHigJ47ilHgg+a7G6wtzdzJ02j2pz2lbh5juvBxHGsgXWNPirp3KlE5xxLR4Dz/PckB34KJB8gcEU9dNR+6bdxNzJ24+7GyG6OURsqsNuJtUuHkDVa3BXNiWEUPoQ8y0fTDrZSpJKQAQQeNYJ2x6hOpGFg20e+mZbl1WTY/uLnJw6xxtWOMRHISHZkqM0/GksqClqSYyVKStJBCj8OOdEU99NQJxPqN6jHMB2x6nrzcComYvuRncbHXcGRRMtN19fLmvRWlNTQfXckN+kFnu5SrkjgAeb36q97908M37w/bTDc5yDHae2xefbylUGDDJprkhmS22j6AJUtLfas8qHgEJ5+tzoil/pqC+6W93UFthuUarcrc7IsKwOvq6g12YMbat2lbbvKaSZrtopB7oCvVV2BpASEp5PPjk+zJN495dut+c2i5T1CNTsAwXCmtx3Y7WLQELnRXJLyU1yXkkqAKW0JS6OVqKx45+JFNzTWvn/K96gYXS/uCvK7ioqt3sNtsbUuRFgsvx01l0/EUwsNEdilIQ++wr9i2fJ5POq9un1B9Ruw+Q5RsxaZ3RZff2EDG5eM5M/j6IfzebO2VXuCXHaWWnPT7S4gjt58BQPw0RTo01G/ZnOt38d6jsq6d90s+j50zExSBltZd/M7NbJaS7JcjuxnW2Po1juR3pUACAeDz8RnvKp0msxi3sYTnpyIsF95pXAPatKCQeD4PkaIqrpr5bJUhKj8SAdfWiJpppoiajx137gbRbedP0+fvbh9vkeMWVjDr1xal1LUtqQVFxl9twrQW1NraCgoK5BA+I5GpD6j/wBbm0+G7zbMIw3ObKZBrPnmJL9WLJbYX6iA4EjucSRwe4+OOfFkb+ji7WpeXE9DASYEmB4DvW63oOuaraLOXGAtesLrh6GDj2W0WVbV7zZhIzWPFiW1tkd21OsVsxl+pGQ3IVICmQ05wtPZx7wBPPGrl2q+US6L9vpuQSpO3m8F/Y5dERW3V3k9gxbTZEFCSlEYrcf8MgKV7qQOeeTyeNUv+jy6Z/9dMi/xuH/AMrWBOrvpZ2c2Rw2tyTA8+lybGVPTEVVTZrElbzRQpSnUeklKkhBSkHkEHuHkHwafivaPhMzdssbUv637CabgPrG3z2XrXWnry0ourVOmB4OCnvtzkPRpuH041W0u2FTlYwmptkWrC4NmY9jFsUPF9K3He71UOpWoEc/YE9p4AOu/PNzunrZDFqrcvOV7r5QcMvPneqNzkirKSZj7CopZQX3PLZbWslHIT4UdQP+TnZvf0pzCQ0HBTitYQ+SD2GT6vLQH2dwR6v5HXR8oLud865VU7WV0jmPRtifYJSfBlup+jSfvQ1wf/lOtDcpmDqb9006odSEOcekSGxMGO+YE+cqtdb+16BwpFbJ9ZfRY3nWD45jeCbtxBQX0mwxdi2umn4FQ9JYWyYzKC8r02CHFBKB4ClAk6zQKTpJZxu+xar20y6qi3uUIzJDtfaCM/V26RwiTCcQ4DHKQVABPgBRHHHjWmAsWtDJgzil2I8tLc2K58Dx3coWPzT/APWtnm0+dMbk4BSZiypPqzo6RKQk/wBXJQe11P8AeBI+4jXXMVa290XU6w3G49FSde5bL6fbSr2ZAYdnAtBg8jnxE/TzVcwT5SPpS6brPKcWods90rK4mXDz17dWk6PPm2ktv6L1HX3X+5QCU8JHAAHwA5Osh7WQulvE5GK5dVYtuRYxqNw3ePVd1kTkuBVSpALhfZiqd9JDvLqz3cHgqJHnzrUJu5/1qZh+/J385WtjGJbl7cMYnRsPZ9jjbjdXEQtCrRkKSoMoBBHd4IPjjXK/aBmsrg6VJ2KElznA+71bDhdt0Ji8fmw85MxDWke907nldubdRnRTsDvBDZnbZ7sTm6GyGVVVAi7Q9j9dZSO5ftUeE4+EocClKUPilKlEpA1mm73i2D6kqGk6lFVu6uOT6ulnxYj1Ff8AzXMERLylOtKUw7wruU0D9bjwOfhrVz1g3NPfb0SbCjtYdjFNdDQH4r6XWyoN+R3JJHI1LPYaV7D0UtzQgr9nobp3tB447VyDxz9nw1K8zt9a4exvHGKlV1MPkf1D3tu7/SrWoKbLG7rUbT4WuIb37d26yTlu5vTxd0tNb5ljfUW7jGWMBhyLMzR1VdkghlLK1SUGQfVIKUJX29vfxyeT51VdwOoTpG3NubO3ynabOnRc1VZRzojE1hmNIgQZXtLEdTaXOOz1OO4f2kgDUPrzrry/ePE8R2RuNt8SraWjkRm6p6vZcRIiBCCg9qlLPIWknv5HvHz8fOqLn2RjF8Vm2aVgPlHox/vcX4B/Lyfy1bNRXoo3NKjjtuqZ5Pftz5crqHsv0liMvg77K6jDj2BkEHp2DJIgc78LOOZdU3ycrlhfVNT097gY5Hs4bVRZM4vJjV0WWmPMbltOFDbwBcQ8ygpc4CgAR8DqVO1Vb0n7sbQWl+zjGaZNF3OiRvnW0yK/enW/+aukste0qdKmVMPJJSGyAFAHz41pPi09tZQrC2iQnXo1ahDsx4DlLKVrCElR+9RA/PU6fkzt2eU5Bsxayj9t3UJUr8ESW0/l6a+PuWdVfX1/l8Pg35DEuAqU4LpaDLeHbHw59AVQcLSsb7IdhXENdIAB4PIE+m30WzLpxwHbHEclyC3xoZZbZNcxmBZX+U267Oe/HZPa0wHVk9raOSQlIHPxPJA1mPOf1Kv/AN2Sf5StYp2G/WOx/wByH8waytnP6lX/AO7JP8pWoezvO3mo8DTyF+QahLgYEDYwNgsZ+yo4++dQoD3QB58hVlr+qR/sjX1zqmX7jjONWDzTim1ogvKStJ4KSGyQQfsOtXmw+8m42F49s/kO3G+2Ubl5lnlFeScqwi3uPnlEUxokhyPJQny7DIcaaT2lXv8APP7dXleKtq3I1zrWPiOfTaDCtmd9sM6rsqzTdPPshqIV/iUu9TNhzky3QmdDTWJH+aCMCQHAE9vZz/aGpMN7oM4315ZXi+V7hN1lErbmoeg19jbJYimYue8lS2m3FBJdKQASkdxAA0RSg1xyNar8F6xclyvON8Zh3UsHq/cPDcqssTrg7IaNA/UoeERMdSwEBT8RJfJZJ95A58678W3r3K2nx2jc2S3yyPdSzyDZ2xy3J6e3tU3pxu1ZhMuNSUL4KmuXHHB7Osn6nBBJHBFtJ5Guda78IyRjb7ONhMg2k6p8q3QvN0LaPDy2isshTaR5MB2Mt2VOTFHmCYzg8AdvA9089qudh4+A0Rc6aaaImorfKRbPZTvh07JwjEJFczPOQQZfdPeU216aEuhXlKVHn3h441KnUS/lNd1cy2d6bUZhglhHh2f6RQIocfjoeSW1peKh2rBHPujz8fGvhyQvHWlQY8tFaD09Xwz3TG8LdbmkKre3noneOY8lq8/o1t/f++sM/wARd/5OrQ3U6IN7NpcNm51eChsKutCVTDWzi44wgqCe8oWhJKeVAHt5I554486qH9IJ1N/601H+DRf+HVrbkdXm/e6uMyMNyvLmVVE0p9pjQ4LEf1wlQUErUhPcU9wB7eeDwOdUbHUdfNu6ZvqluaUjqgPnp742G8cd08r27h+CNJ3YtqdUbTET57rMPSN1Q0mM0M7b7LKKrrYVRWybWNNgshlUlTDfe42+OffdWlPur+JICSPhqMM2dd7t7lP2Vi4V2GR2S331A89nerk8fclPgfckao1pjt/QsQ5NxWSYKLJkvxfXT6anmu4p7wk8EpJBAPHB4PHPB1lHp2xxDtjPymSUcREeyscqH11DlR/JPj/3au+IwNnSyNS6tx71aOr5TMevf5hR0jgf4gzdCwbw9w6vJo3d9gfmqzv3iDAxituK5jtTTdsRQA+DBHCf4KA/vavPoW3E9ms7bbOe/wANzB8514Ufg6gAPIH4o7Vcf+Q6r93Wwr2nm00pxstTWVMq5UPHI8H8jwfy1FfFL622yz+BfxuEzaCwC1JCgO/sVwtH4KT3J/A6uF5/IXjLhnB5/sfsrd+IfRNKrUNSg0BlwzaOBUZEekjp+67t3PO6mX/vyd/OVq+IPSNvrYwY1hExaKtiWy2+0o2UcEoWkKSeCvkeCNY93EtIV9n2RXlY6Fw7C0lSmFE8EtrcUpPP38Ea2jYa41+h2PkOo81ML+0P9AjXJNf6pu9M06VWza13W5wPUCeN9oIVf0Hpy2zzUrwub0NbwQN+DMg+C1cZ3gOUbbZCvGMvgoiWLbTb6m0PIdAQscpPcgkfDU+Nlf+w27/AOnL3/8AUnUX+tXhW+crtUk8VkEHhQ/0epPbLONjobe5dR4xy9B94ePek687UF7UyWDx93VADn1KTjHEkE7cqt5+0ZYXtW1pklrHkCeYBUCtuv15pP8AfG9XbvrkZnXUfHI6+Wq9Pe6Afi8sfA/gnj+J1Y2KWTNHkdfbyRy3DeS6oAgk8fZqo4tQ2m5u4NfRoc5l31glC18j3ApXK1/glPcfwGugG0Na9bWjgQPUlWKlqUYzStfFtdHa1A558GMaD9z/AIlS26ZdmIM3YS4avGAh7PmnElak+83HSClg/wB/lz+GovbdZdfbFbxVeSlpbc7F7UomMDwXEJUW32vwUgrT+Y1strINbT1sSnrQ21EgsNxmGwocJbQkJSP4Aag11o4GnHdy2cugoSImTseuspI4EprhDv8AEdivxUdWjN4mlUsBSeJbBa4eIdz/AN5r8+6G1VVu85cB5jtT1s8i3gfpj9K3T9OFrXXs9y7qJKZEGwqmpUV5J5DjThSpCvzSRrMGc/qVf/uyT/KVrX98jzuyM1wS1wGzlpXaYWwmO0lSwVLgOudzJ/BCvUR9wCNbAc5/Uq//AHZJ/lK1y/QeFqaexTsbU/JUqQfFpdLT8wQV2/OXjb+6/aG/ma36xuPqvbaSGolJLlPxkyGmYrji2lccOJCCSk8/tA4/PUNOlXqJ2qevMPTD6SImz0Tdlh/9GL2tbgOxbhbAKlR3XIyEOMr4QpSUuJ4Pb9njUzbGEqyppNehwNqkxlshZHISVII54+346hdhfQRu5S4ZjuLZJ1DQ5ze3dRYw8GjwMeMRmvny2XGTPkq9VTkhbaXVlCAUgHgk/EG6Lx1e3SZuP0578Zvn2ebfbJY7jOTY5briquU1sZMy1gvd4asEupbSoIeLTv2n6vlR51ZNhvPthvdntZnFh0a0WW4TMtjj0HP7yXTolOoYfU05KYiyuHVRGnCv3wsEeSE8+NX5099Fs7p33FrMsot3bnIagYe3illWXUdpXKWFhyMqOppKA22hReHYsLVw6feOseZD8m7OyOPA2tsdx6GXtLU28iyq4MvFWnr+qjPyRIfr4liV/RtOODgr7O/t8edEXfL6ktvZ6dwMde6XsUk4hsY1kcWEt29rfU7q+MUuNxa4t+sy080vsLiUlASog8gEa7tr+p/aaFRULnS501Ur0jMcRnZTIrqp+FTLbfgyWWJMKQr0+0uN+stXco8EJHA98HXZ/kCZI3kW781jMcHEHc9rI0MSV4gFXNb85MltDaZ/q95Yb8ctgAK974d2rnwToUqtvN7zvFjmWNsJsMHXjVrVphkMvWS2WGnLBrhfDfqJjoK0cclQ7u7k6IsR4P1T4fh1fhm5uB9EOJYvdbvLs11UlvI6iqVMiRG0OuvPS1NIS33LUpPprKSSjnzyBqfdJPetaaBZyYqIzsuM0+4yh9L6W1LQFFIcT7qwCeO4eDxyPB1DTJvk/MltNsdlMGgZ1h0yVtJCtIjv6RYp86V9mZnaApUVboAKO3kdxPCuCOONTIxysepsfrKiQYhdgw2IyzEjhhjuQ2lJ9NsE9iOR4TyeBwPs0RVHTTTRE1T7rH6LJIXzdkNLAtIneHPQmxkPt9w+Cu1YI5HJ8/fqoaaIrR/6IdqP/DLE/wDBIv8Awa8oxLZWguY9YnG8KrbaQ2p1iOIUNmQ4hIJUpKe0KIASrkgceD+zV8axbm+3WTXWaquMYRBr2bCImLaTHZ61+1NJQ6kNKiFkp7h6hCXUuoUAo8hQHaoROxRVCbF2CyBMe4sGMAsUyHUwGJTyILwcd45DKFnnlXCgQgHnz8POuW6fYSCxYFqswGOzVOhuf2sQkJiuFXaEu+OEKKh28K4PI41ZVFtPuDV1lSidS4vbSIlM9j70e1sVy44bX6B9oHbFb7h9EpKme1JUkI+kHHilSOnvO4a5LkO1rbBa5SJcNSpQhKhAWxmOMIKIy+8OJ9Mhx3vUhaFJHKVdwNHRs3ZSa9zDLTBWS4kbYawkKiQWcCkvob9ZTTSYS1hvx7xA88e8nz8PI/bo9h+w7lpLrZGMYEqxiI9eXHXBhF9pHg97iSnuSPeT5I+0ft1aeY7IZFnIUzKfoq2Na11ZDt0rbXMcX7IZS+wKQGCsKdeYX3co8s/V+zVFkbBbiWMmxn3l/UT37pp9MhsfRNR5K4EeKZaFBn1HC56LoU0tfYn1EKT5RwclxPJUn1alTZ7ifUrKK9sNm0Ikur2/wxKIfIkqNTEAZ4SFHvPZ7vukK88eCD8Ne2rh7Z2UCPLpouMyoby/Zo7sVuOtpawPqIKfBIAPuj9mrBpNns3rY2dIn31LLXndbMMtLcd1oN2LnqpbWVKUv1EBlxtkqCUnsjNe6fPFGtdj9xsgni8TOxSgkRZbV1ChMtPS2mrRlllll4uAM+fTbdSVdh918p7VdvJ1vpsqfGAfVRa9zPhMLIV1j+xZuFwshpsF+dEMestqZGhe0BlKSrvKVju7QlKjz8AAT8Br31dVtVJoymmrsUdp/QcXxFZjKjejyQ4fdHZ289wP2c886sPMdps2ucnzedWirVAy6nRDbD9ipCWHkxVND1GRGUVgqKfeDo4ST7p44PVN2o3AkSshsosDFoiszhv1ljDblPelXNONtIDzSgyPXWQhwqSUtgqUj3uASRpsIDSNgsEkmSruawjYV+TPhM4lgLkirHdOaTXwiuKOOeXUhPKPA/tca9DGIbLVN4K2Ji2GRrlphUhMViviJlhrg8rS2lPqcccjkDVhStkMssseVt/Ih4c3TF1+NLs32XZMyzr3pftDrDjYDfYHO1CHU+orv5UoFPASfNB263egiZiRiY3InTGfbv02eStTsd/2VMEBtnjvD4aR6oX6naApSPt7tTUSARBWSq6btPZRKmW3EoY/z6kqrmZsNuK/J4PHuNOpSsn4eO37QftGqpP29wK1QhuzwmglobJUhL9Yw4Ek/aApJ41iSr2Iy+gjPY3EGLzKl5EWBDklDzDtPBjy1yW0MNEOdxT6y0JHqp49JpXJ+qnPYHGslzjsSoNo02mWtAPoqLRYRhmLyHJWNYlS1LzyPTccg17MdS0c89pKEgkc+eNcZz+pV/8AuyT/AClarmvDd1guqafTqeLInRnI5cCe7s70lPPH28c6wti9bX9Uj/ZGvvXCU9qQnn4DjXOiJpppoiaaaaImmmmiJpppoiaaaaImmmmiJpppoiaaaaImmmmiJpppoiaaaaImmmmiJpppoiaaaaImmmmiJpppoiaaaaImmmmiL//Z" alt="Governo da Bahia" style="height: 70px !important; width: auto !important;">
+          </div>
+          <div class="header-info">
+            <h1 class="header-title">NOTA TÉCNICA <span id="numNotaDisplay">___</span>/2026</h1>
+            <div class="header-meta">
+              <div><strong>SETOR:</strong> SGINF/DIE/COORDENAÇÃO DE AVALIAÇÃO</div>
+              <div><strong>ATUALIZAÇÃO:</strong> <span id="dataAtualizacao"></span></div>
+              <div><strong>RESPONSÁVEL:</strong> <span id="tecnicoResponsavel"></span></div>
+            </div>
+          </div>
+        </header>
+
+        <div class="school-card">
+          <div class="school-name" id="nomeEntidade">Carregando...</div>
+          <div class="school-details">
+            <div><span class="school-label" id="labelCodigo">INEP:</span> <span id="codigoEntidade"></span></div>
+            <div><span class="school-label">REGIONAL:</span> <span id="regionalEntidade"></span></div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <strong>OBJETIVO:</strong> Apresentar os resultados do SABE – Sistema de Avaliação Baiano da Educação e IDEB/SAEB.
+        </div>
+
+        <div id="secaoSabe">
+          <div class="section-title">1. DADOS DA SÉRIE HISTÓRICA DO SABE</div>
+          <div id="tabelasContainerSabe"></div>
+          <div class="footer-mini">Fonte: Portal SABE • Elaboração: SGINF/CAV</div>
+        </div>
+
+        <div id="secaoSaeb" style="margin-top: 30px;">
+          <div id="conteudoSaeb"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ===================== ABA DOCUMENTO EDITÁVEL ===================== -->
+    <div id="documentoArea" style="display:none;">
+      
+      <!-- Toolbar de edição -->
+      <div class="doc-editor-wrapper no-print" id="docToolbarWrapper">
+        <div class="doc-toolbar" id="docToolbar">
+          <!-- Formatação de bloco -->
+          <select id="formatBlock" onchange="execFormatBlock(this.value); this.value='';" title="Tipo de bloco">
+            <option value="">Formatar...</option>
+            <option value="P">Parágrafo</option>
+            <option value="H1">Título 1</option>
+            <option value="H2">Título 2</option>
+            <option value="H3">Título 3</option>
+            <option value="BLOCKQUOTE">Citação</option>
+          </select>
+
+          <div class="tb-sep"></div>
+
+          <!-- Formatação inline -->
+          <button onclick="execCmd('bold')" title="Negrito"><b>N</b></button>
+          <button onclick="execCmd('italic')" title="Itálico"><i>I</i></button>
+          <button onclick="execCmd('underline')" title="Sublinhado"><u>S</u></button>
+          <button onclick="execCmd('strikeThrough')" title="Tachado"><s>T</s></button>
+
+          <div class="tb-sep"></div>
+
+          <!-- Alinhamento -->
+          <button onclick="execCmd('justifyLeft')" title="Alinhar à esquerda">⬅</button>
+          <button onclick="execCmd('justifyCenter')" title="Centralizar">⬛</button>
+          <button onclick="execCmd('justifyRight')" title="Alinhar à direita">➡</button>
+          <button onclick="execCmd('justifyFull')" title="Justificar">☰</button>
+
+          <div class="tb-sep"></div>
+
+          <!-- Listas -->
+          <button onclick="execCmd('insertUnorderedList')" title="Lista com marcadores">• Lista</button>
+          <button onclick="execCmd('insertOrderedList')" title="Lista numerada">1. Lista</button>
+
+          <div class="tb-sep"></div>
+
+          <!-- Indentação -->
+          <button onclick="execCmd('indent')" title="Aumentar recuo">→|</button>
+          <button onclick="execCmd('outdent')" title="Diminuir recuo">|←</button>
+
+          <div class="tb-sep"></div>
+
+          <!-- Tabela -->
+          <button onclick="inserirTabela()" title="Inserir tabela">▦ Tabela</button>
+          
+          <!-- Linha horizontal -->
+          <button onclick="execCmd('insertHorizontalRule')" title="Linha horizontal">─</button>
+
+          <div class="tb-sep"></div>
+
+          <!-- Desfazer/Refazer -->
+          <button onclick="execCmd('undo')" title="Desfazer">↩</button>
+          <button onclick="execCmd('redo')" title="Refazer">↪</button>
+
+          <div class="tb-sep"></div>
+
+          <!-- Limpar formatação -->
+          <button onclick="execCmd('removeFormat')" title="Limpar formatação">✕ Limpar</button>
+        </div>
+      </div>
+
+      <!-- Documento A4 editável -->
+      <div class="doc-editor-area" id="docEditorPage">
+        
+        <!-- Cabeçalho do documento (mesmo estilo institucional) -->
+        <header class="header-modern">
+          <div class="header-logo">
+            <img src="data:image/jpeg;base64,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" alt="Governo da Bahia" style="height: 70px !important; width: auto !important;">
+          </div>
+          <div class="header-info">
+            <h1 class="doc-title-editable" id="docTituloEditavel" contenteditable="true" spellcheck="true">DOCUMENTO</h1>
+            <div class="header-meta">
+              <div><strong>SETOR:</strong> <span contenteditable="true" style="border-bottom:1px dashed #ccc;">SGINF/DIE/COORDENAÇÃO DE AVALIAÇÃO</span></div>
+              <div><strong>DATA:</strong> <span id="docDataAtual" contenteditable="true" style="border-bottom:1px dashed #ccc;"></span></div>
+              <div><strong>RESPONSÁVEL:</strong> <span id="docResponsavel" contenteditable="true" style="border-bottom:1px dashed #ccc;"></span></div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Corpo editável do documento -->
+        <div class="doc-body-editable" id="docBodyEditavel" contenteditable="true" spellcheck="true">
+          <h1>Título da Seção</h1>
+          <p>Clique aqui para editar o conteúdo do documento. Você pode formatar o texto utilizando a barra de ferramentas acima.</p>
+          <h2>Subtítulo</h2>
+          <p>Adicione parágrafos, listas numeradas, listas com marcadores, tabelas e mais. Todo o conteúdo é editável e pode ser personalizado conforme a necessidade.</p>
+          <ol>
+            <li>Primeiro item da lista</li>
+            <li>Segundo item</li>
+            <li>Terceiro item</li>
+          </ol>
+          <p>Continue editando livremente...</p>
+        </div>
+
+        <div class="footer-mini">
+          <span contenteditable="true">Secretaria da Educação do Estado da Bahia • SGINF/DIE/CAV</span>
+        </div>
+      </div>
+
+    </div>
+    <!-- FIM ABA DOCUMENTO -->
+
+  </div>
+
+  <script>
+    let usuarioLogado = "";
+    let nomeEntidadeAtual = "";
+    let modoAtual = "escola"; // "escola", "municipio" ou "documento"
+    let dadosSabeAtual = [];
+    let dadosSaebAtual = [];
+    
+    const TEMPO_SESSAO = 60 * 60 * 1000;
+
+    // --- VERIFICAÇÃO AUTOMÁTICA AO ABRIR ---
+    window.onload = function() {
+      verificarSessaoSalva();
+    };
+
+    function verificarSessaoSalva() {
+      try {
+        const sessao = JSON.parse(localStorage.getItem('painelSabeSession'));
+        if (sessao) {
+          const agora = new Date().getTime();
+          if (agora - sessao.timestamp < TEMPO_SESSAO) {
+            usuarioLogado = sessao.nome;
+            entrarNoSistema(sessao.nome);
+          } else {
+            localStorage.removeItem('painelSabeSession');
+          }
+        }
+      } catch(e) {
+        localStorage.removeItem('painelSabeSession');
+      }
+    }
+
+    // --- LOGIN ---
+    function fazerLogin() {
+      const cpf = document.getElementById('cpfInput').value;
+      if(!cpf) { 
+        document.getElementById('loginError').innerText = "Digite seu CPF.";
+        return; 
+      }
+      
+      var btnLogin = document.getElementById('btnLogin');
+      btnLogin.disabled = true;
+      btnLogin.innerText = "Verificando...";
+      document.getElementById('loginError').innerText = "";
+      
+      google.script.run
+        .withSuccessHandler(function(res) {
+          btnLogin.disabled = false;
+          btnLogin.innerText = "Entrar";
+          if (res.sucesso) {
+            usuarioLogado = res.nome;
+            var dadosSessao = { nome: res.nome, timestamp: new Date().getTime() };
+            localStorage.setItem('painelSabeSession', JSON.stringify(dadosSessao));
+            entrarNoSistema(res.nome);
+          } else {
+            document.getElementById('loginError').innerText = res.msg || "CPF não encontrado.";
+          }
+        })
+        .withFailureHandler(function(err) {
+          btnLogin.disabled = false;
+          btnLogin.innerText = "Entrar";
+          document.getElementById('loginError').innerText = "Erro ao conectar: " + (err.message || String(err));
+        })
+        .verificarLogin(cpf);
+    }
+
+    function entrarNoSistema(nome) {
+      document.getElementById('userDisplay').innerText = nome;
+      document.getElementById('tecnicoResponsavel').innerText = nome;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('mainScreen').style.display = 'block';
+
+      // Preenche dados do documento editável
+      var hoje = new Date();
+      var dataFormatada = ('0'+hoje.getDate()).slice(-2) + '/' + ('0'+(hoje.getMonth()+1)).slice(-2) + '/' + hoje.getFullYear();
+      document.getElementById('docDataAtual').innerText = dataFormatada;
+      document.getElementById('docResponsavel').innerText = nome;
+    }
+
+    function sair() {
+      localStorage.removeItem('painelSabeSession');
+      location.reload(); 
+    }
+
+    // --- TROCA DE MODO (ESCOLA / MUNICÍPIO / DOCUMENTO) ---
+    function trocarModo(modo) {
+      modoAtual = modo;
+      var tabEscola = document.getElementById('tabEscola');
+      var tabMunicipio = document.getElementById('tabMunicipio');
+      var tabDocumento = document.getElementById('tabDocumento');
+      var searchInput = document.getElementById('searchInput');
+      var filtrosDados = document.getElementById('filtrosDados');
+
+      // Reset abas
+      tabEscola.classList.remove('active');
+      tabMunicipio.classList.remove('active');
+      tabDocumento.classList.remove('active');
+
+      // Esconde todas as áreas
+      document.getElementById('relatorioArea').style.display = 'none';
+      document.getElementById('documentoArea').style.display = 'none';
+      document.getElementById('loading').style.display = 'none';
+
+      if (modo === 'escola') {
+        tabEscola.classList.add('active');
+        searchInput.placeholder = "Código INEP";
+        filtrosDados.style.display = 'block';
+      } else if (modo === 'municipio') {
+        tabMunicipio.classList.add('active');
+        searchInput.placeholder = "Código do Município";
+        filtrosDados.style.display = 'block';
+      } else if (modo === 'documento') {
+        tabDocumento.classList.add('active');
+        filtrosDados.style.display = 'none';
+        document.getElementById('documentoArea').style.display = 'block';
+      }
+
+      if (modo !== 'documento') {
+        searchInput.value = '';
+        dadosSabeAtual = [];
+        dadosSaebAtual = [];
+        atualizarVisibilidade();
+      }
+    }
+
+    // --- BUSCA UNIFICADA ---
+    function buscar() {
+      var codigo = document.getElementById('searchInput').value.trim();
+      if (!codigo) return;
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('relatorioArea').style.display = 'none';
+
+      var failHandler = function(err) {
+        document.getElementById('loading').style.display = 'none';
+        popupAlerta('Erro na busca', 'Não foi possível buscar os dados. Verifique sua conexão e tente novamente.<br><br><small style="color:#999">' + (err.message || String(err)) + '</small>', 'error');
+      };
+
+      if (modoAtual === 'escola') {
+        google.script.run
+          .withSuccessHandler(renderizarRelatorio)
+          .withFailureHandler(failHandler)
+          .buscarDadosEscola(codigo);
+      } else {
+        google.script.run
+          .withSuccessHandler(renderizarRelatorio)
+          .withFailureHandler(failHandler)
+          .buscarDadosMunicipio(codigo);
+      }
+    }
+
+    // --- RENDERIZAÇÃO DO RELATÓRIO ---
+    function renderizarRelatorio(res) {
+      document.getElementById('loading').style.display = 'none';
+      if (res.erro) { popupAlerta('Não encontrado', res.erro, 'warning'); return; }
+      
+      var info = res.info;
+      var tipo = res.tipo;
+      nomeEntidadeAtual = info.nome;
+
+      document.getElementById('nomeEntidade').innerText = info.nome;
+      document.getElementById('codigoEntidade').innerText = info.codigo;
+      document.getElementById('dataAtualizacao').innerText = info.dataAtual;
+
+      if (tipo === 'escola') {
+        document.getElementById('labelCodigo').innerText = "INEP:";
+        document.getElementById('regionalEntidade').innerText = info.regional + " – " + info.municipio;
+      } else {
+        document.getElementById('labelCodigo').innerText = "CÓD. MUNICÍPIO:";
+        document.getElementById('regionalEntidade').innerText = info.regional;
+      }
+
+      dadosSabeAtual = res.historico || [];
+      dadosSaebAtual = res.saeb || [];
+
+      renderizarSabe();
+      renderizarSaeb();
+
+      document.getElementById('relatorioArea').style.display = 'block';
+      atualizarVisibilidade();
+    }
+
+    // --- FORMATAÇÃO E HELPERS ---
+    function formatarEtapaCompleta(texto) {
+      if (!texto) return "";
+      var t = String(texto).toUpperCase();
+      t = t.replace(/\bAI\b/g, "ANOS INICIAIS").replace(/\bAF\b/g, "ANOS FINAIS").replace(/\bEM\b/g, "ENSINO MÉDIO");
+      return t;
+    }
+
+    function atualizarNumNota() { document.getElementById('numNotaDisplay').innerText = document.getElementById('numNotaInput').value || "___"; }
+    
+    function atualizarVisibilidade() {
+      var sabeAtivo = document.getElementById('checkSabe').checked;
+      var saebAtivo = document.getElementById('checkSaeb').checked;
+
+      document.getElementById('secaoSabe').style.display = sabeAtivo ? 'block' : 'none';
+      document.getElementById('secaoSaeb').style.display = saebAtivo ? 'block' : 'none';
+      
+      var isMunicipio = (modoAtual === 'municipio');
+      document.getElementById('filtroRedeSabe').style.display = (isMunicipio && sabeAtivo) ? 'flex' : 'none';
+      document.getElementById('filtroRedeSaeb').style.display = (isMunicipio && saebAtivo) ? 'flex' : 'none';
+    }
+
+    function getRedesAtivas(prefixo) {
+      var redes = [];
+      var elMunicipal = document.getElementById(prefixo + 'RedeMunicipal');
+      var elEstadual = document.getElementById(prefixo + 'RedeEstadual');
+      var elPublica = document.getElementById(prefixo + 'RedePublica');
+      if (elMunicipal && elMunicipal.checked) redes.push('MUNICIPAL');
+      if (elEstadual && elEstadual.checked) redes.push('ESTADUAL');
+      if (elPublica && elPublica.checked) redes.push('PÚBLICA', 'PUBLICA');
+      return redes;
+    }
+
+    function correspondeRede(redeBloco, redesAtivas) {
+      var redeUpper = String(redeBloco).toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      return redesAtivas.some(function(r) {
+        var rNorm = r.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        return redeUpper.includes(rNorm);
+      });
+    }
+
+    function renderizarSabe() {
+      var divSabe = document.getElementById('tabelasContainerSabe');
+      var dados = dadosSabeAtual;
+
+      if (modoAtual === 'municipio' && dados.length > 0) {
+        var redes = getRedesAtivas('checkSabe');
+        dados = dados.filter(function(bloco) { return correspondeRede(bloco.rede, redes); });
+      }
+
+      divSabe.innerHTML = dados.length > 0 
+        ? dados.map(criarTabelaHTML).join('') 
+        : "<p class='text-muted'>Sem dados SABE para os filtros selecionados.</p>";
+    }
+
+    function renderizarSaeb() {
+      var divSaeb = document.getElementById('conteudoSaeb');
+      var dados = dadosSaebAtual;
+
+      if (modoAtual === 'municipio' && dados.length > 0) {
+        var redes = getRedesAtivas('checkSaeb');
+        dados = dados.filter(function(bloco) { return correspondeRede(bloco.rede, redes); });
+      }
+
+      if (dados.length > 0) {
+        divSaeb.innerHTML = '<div class="section-title">2. RESULTADO DO IDEB/SAEB – 2023</div>' + dados.map(criarTabelaSaebHTML).join('');
+      } else {
+        divSaeb.innerHTML = '<div class="section-title">2. RESULTADO DO IDEB/SAEB – 2023</div><p class=\'text-muted\'>Sem dados Saeb para os filtros selecionados.</p>';
+      }
+    }
+
+    function filtrarRede() {
+      renderizarSabe();
+      renderizarSaeb();
+    }
+    
+    function imprimirDocumento() { window.print(); }
+
+    function formatar(v, d) { 
+      if (d === undefined) d = 2;
+      return (!v || v=="ND" || v=="-" || isNaN(v)) ? "-" : parseFloat(v).toFixed(d).replace('.', ','); 
+    }
+    function formatarPercentual(v) { return formatar(v) + "%"; }
+    
+    function renderDiff(v, seta) {
+      if(!v) return "-";
+      if(seta) return v > 0 ? '<span class="seta-up">▲</span>' : (v < 0 ? '<span class="seta-down">▼</span>' : '<span class="seta-equal">●</span>');
+      return v;
+    }
+    
+    function renderBadge(t) {
+      if(!t || t=="-") return "-";
+      var classe = ""; var texto = t; t = t.toLowerCase();
+      if(t.includes("abaixo")) { classe = "nv-abaixo"; }
+      else if(t.includes("básico")) { classe = "nv-basico"; }
+      else if(t.includes("adequado")) { classe = "nv-adequado"; }
+      else if(t.includes("avançado")) { classe = "nv-avancado"; }
+      return '<span class="badge-nivel ' + classe + '">' + texto + '</span>';
+    }
+
+    // --- CRIAÇÃO DE TABELAS SABE ---
+    function criarTabelaHTML(bloco) {
+      var dadosOrdenados = bloco.linhas.sort(function(a,b) { return a.edicao - b.edicao; });
+      var ultimoAno = dadosOrdenados[dadosOrdenados.length - 1];
+      var etapaExtensa = formatarEtapaCompleta(bloco.etapa);
+
+      var linhas = dadosOrdenados.map(function(row) {
+        var classeRow = row.preliminar ? 'class="row-preliminar"' : '';
+        var badgePrelim = row.preliminar ? '<span class="badge-preliminar">PRELIMINAR</span>' : '';
+        return '<tr ' + classeRow + '>' +
+          '<td><strong>' + row.edicao + '</strong>' + badgePrelim + '</td>' +
+          '<td>' + formatar(row.lp.nota) + '</td>' +
+          '<td>' + renderDiff(row.lp.diff, true) + '</td>' +
+          '<td>' + renderBadge(row.lp.padrao) + '</td>' +
+          '<td>' + formatar(row.mt.nota) + '</td>' +
+          '<td>' + renderDiff(row.mt.diff, true) + '</td>' +
+          '<td>' + renderBadge(row.mt.padrao) + '</td>' +
+          '<td><strong>' + formatarPercentual(row.participacao.percentual) + '</strong></td>' +
+        '</tr>';
+      }).join('');
+
+      var notaPreliminar = bloco.temPreliminar 
+        ? '<div class="nota-preliminar">⚠ Os dados do SABE 2025 são <strong>preliminares</strong> e estão sujeitos a possíveis alterações.</div>' 
+        : '';
+      
+      var textoAnalise = gerarTextoAnaliseSabe(etapaExtensa, bloco.rede, ultimoAno);
+
+      return '<div class="no-break mb-5">' +
+          '<div style="font-weight:700; color:#002060; margin-bottom:5px;">' + etapaExtensa + ' – REDE ' + bloco.rede + '</div>' +
+          '<div class="analysis-box" contenteditable="true">' + textoAnalise + '</div>' +
+          '<div class="table-responsive">' +
+            '<table class="modern-table">' +
+              '<thead>' +
+                '<tr><th colspan="8">RESULTADO SABE - ' + etapaExtensa + ' – REDE ' + bloco.rede + '</th></tr>' +
+                '<tr class="sub-header">' +
+                  '<th>Edição</th><th colspan="3">Língua Portuguesa</th><th colspan="3">Matemática</th><th>Partic.</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>' + linhas + '</tbody>' +
+            '</table>' +
+          '</div>' +
+          notaPreliminar +
+        '</div>';
+    }
+
+    // --- CRIAÇÃO DE TABELAS SAEB ---
+    function criarTabelaSaebHTML(bloco) {
+      var dados = bloco.dadosAnos.sort(function(a,b) { return a.ano - b.ano; });
+      var qtdLinhas = dados.length;
+      var etapaExtensa = formatarEtapaCompleta(bloco.etapa);
+
+      var linhas = dados.map(function(d, idx) {
+        var colunasMescladas = "";
+        if (idx === 0) {
+            colunasMescladas = 
+                '<td rowspan="' + qtdLinhas + '" class="cell-merged">' + bloco.municipio + '</td>' +
+                '<td rowspan="' + qtdLinhas + '" class="cell-merged">' + bloco.rede + '</td>';
+        }
+        return '<tr>' +
+          colunasMescladas +
+          '<td>' + d.ano + '</td>' +
+          '<td>' + formatar(d.ir) + '</td>' +
+          '<td>' + formatar(d.mat) + '</td>' +
+          '<td>' + formatar(d.lp) + '</td>' +
+          '<td>' + formatar(d.mp) + '</td>' +
+          '<td class="highlight-cell">' + formatar(d.ideb, 1) + '</td>' +
+        '</tr>';
+      }).join('');
+
+      var atual = dados[dados.length-1];
+      var anterior = dados[dados.length-2];
+      var textoAnalise = gerarTextoAnaliseSaeb(etapaExtensa, bloco.rede, atual, anterior);
+
+      return '<div class="no-break mb-5">' +
+          '<div style="font-weight:700; color:#002060; margin-bottom:5px;">' + etapaExtensa + '</div>' +
+          '<div class="analysis-box" contenteditable="true">' + textoAnalise + '</div>' +
+          '<div class="table-responsive">' +
+            '<table class="modern-table">' +
+              '<thead>' +
+                '<tr><th colspan="9">RESULTADO SAEB - ' + etapaExtensa + ' – REDE ' + bloco.rede + '</th></tr>' +
+                '<tr class="sub-header">' +
+                  '<th style="width: 20%;">Município</th><th style="width: 15%;">Rede</th><th>Edição</th>' +
+                  '<th>Rendimento (P)</th><th>Matemática</th><th>Português</th><th>Média (N)</th><th>IDEB</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>' + linhas + '</tbody>' +
+            '</table>' +
+          '</div>' +
+          '<div class="footer-mini">Fonte: MEC/Inep • Elaboração: SGINF/DIE/CAV</div>' +
+        '</div>';
+    }
+
+    // --- TEXTOS DE ANÁLISE ---
+    function gerarTextoAnaliseSabe(etapa, rede, dados) {
+      if (!dados) return "";
+      var ano = dados.edicao;
+      var isPrelim = dados.preliminar;
+      var partDiff = parseFloat(dados.participacao.diff);
+      var texto = 'Na Rede ' + rede + ', na etapa ' + etapa + ', em ' + ano + (isPrelim ? ' (dados preliminares)' : '') + ', ';
+      if (!isNaN(partDiff)) {
+        if (partDiff > 0) texto += 'a participação foi de ' + formatarPercentual(dados.participacao.percentual) + ', com aumento de ' + formatar(Math.abs(partDiff)) + '% comparado à edição anterior. ';
+        else if (partDiff < 0) texto += 'a participação foi de ' + formatarPercentual(dados.participacao.percentual) + ', com queda de ' + formatar(Math.abs(partDiff)) + '% comparado à edição anterior. ';
+        else texto += 'a participação manteve-se estável em ' + formatarPercentual(dados.participacao.percentual) + '. ';
+      } else { texto += 'a participação foi de ' + formatarPercentual(dados.participacao.percentual) + '. '; }
+      texto += 'Em Língua Portuguesa, a proficiência média foi ' + formatar(dados.lp.nota) + ', enquanto em Matemática atingiu ' + formatar(dados.mt.nota) + '.';
+      return texto;
+    }
+
+    function gerarTextoAnaliseSaeb(etapa, rede, atual, anterior) {
+      var idebAtual = parseFloat(atual.ideb);
+      var idebAnt = anterior ? parseFloat(anterior.ideb) : NaN;
+      var texto = 'A rede ' + rede + ', na etapa ' + etapa + ', ';
+      if (!isNaN(idebAtual)) {
+        texto += 'apresentou em 2023 um IDEB de ' + formatar(idebAtual, 1) + '. ';
+        if (!isNaN(idebAnt)) {
+          var diff = idebAtual - idebAnt;
+          if (diff > 0) texto += 'Comparado a 2021 (' + formatar(idebAnt, 1) + '), houve crescimento de ' + formatar(diff, 1) + ' ponto(s).';
+          else if (diff < 0) texto += 'Comparado a 2021 (' + formatar(idebAnt, 1) + '), houve redução de ' + formatar(Math.abs(diff), 1) + ' ponto(s).';
+          else texto += 'O resultado manteve-se estável em relação a 2021.';
+        }
+      } else { texto += 'não teve seu IDEB calculado em 2023.'; }
+      return texto;
+    }
+
+    // =============================================
+    // FUNÇÕES DO EDITOR DE DOCUMENTO
+    // =============================================
+
+    function execCmd(command, value) {
+      document.execCommand(command, false, value || null);
+      document.getElementById('docBodyEditavel').focus();
+    }
+
+    function execFormatBlock(tag) {
+      if (!tag) return;
+      document.execCommand('formatBlock', false, '<' + tag + '>');
+      document.getElementById('docBodyEditavel').focus();
+    }
+
+    function inserirTabela() {
+      popupPrompt('Inserir Tabela', 'Defina as dimensões da tabela', [
+        { id: 'linhas', label: 'Linhas', placeholder: '3', valor: '3' },
+        { id: 'colunas', label: 'Colunas', placeholder: '3', valor: '3' }
+      ]).then(function(confirmou) {
+        if (!confirmou) return;
+        var linhas = parseInt(document.getElementById('popupInput_linhas').value);
+        var colunas = parseInt(document.getElementById('popupInput_colunas').value);
+        if (isNaN(linhas) || isNaN(colunas) || linhas < 1 || colunas < 1) return;
+
+      var html = '<table><thead><tr>';
+      for (var c = 0; c < colunas; c++) {
+        html += '<th>Coluna ' + (c+1) + '</th>';
+      }
+      html += '</tr></thead><tbody>';
+      for (var r = 0; r < linhas; r++) {
+        html += '<tr>';
+        for (var c = 0; c < colunas; c++) {
+          html += '<td>&nbsp;</td>';
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table><p><br></p>';
+
+      document.execCommand('insertHTML', false, html);
+      document.getElementById('docBodyEditavel').focus();
+      });
+    }
+
+    // Atalhos de teclado no editor
+    document.addEventListener('keydown', function(e) {
+      // Só funciona se o foco está no editor
+      var editor = document.getElementById('docBodyEditavel');
+      if (!editor || !editor.contains(document.activeElement) && document.activeElement !== editor) return;
+
+      if (e.ctrlKey || e.metaKey) {
+        switch(e.key.toLowerCase()) {
+          case 'b': e.preventDefault(); execCmd('bold'); break;
+          case 'i': e.preventDefault(); execCmd('italic'); break;
+          case 'u': e.preventDefault(); execCmd('underline'); break;
+        }
+      }
+    });
+
+    // ===================== SISTEMA DE POPUP PERSONALIZADO =====================
+    var _popupResolve = null;
+
+    function mostrarPopup(opts) {
+      // opts: { tipo, titulo, subtitulo, mensagem, botoes: [{texto, classe, valor}], inputs: [{id, label, placeholder, valor}] }
+      var ov = document.getElementById('popupOverlay');
+      var box = document.getElementById('popupBox');
+
+      var tipo = opts.tipo || 'info';
+      var icones = {
+        error: '✕', warning: '⚠', success: '✓', info: 'ℹ', input: '✎'
+      };
+
+      var h = '<div class="popup-header">';
+      h += '<div class="popup-icon ' + tipo + '">' + (icones[tipo] || 'ℹ') + '</div>';
+      h += '<div class="popup-header-text">';
+      h += '<h3>' + (opts.titulo || 'Aviso') + '</h3>';
+      if (opts.subtitulo) h += '<p>' + opts.subtitulo + '</p>';
+      h += '</div></div>';
+
+      h += '<div class="popup-body">';
+      if (opts.mensagem) h += '<p>' + opts.mensagem + '</p>';
+      if (opts.inputs && opts.inputs.length) {
+        h += '<div class="popup-input-row">';
+        opts.inputs.forEach(function(inp) {
+          h += '<div style="flex:1"><label>' + inp.label + '</label>';
+          h += '<input type="text" id="popupInput_' + inp.id + '" placeholder="' + (inp.placeholder || '') + '" value="' + (inp.valor || '') + '"></div>';
+        });
+        h += '</div>';
+      }
+      h += '</div>';
+
+      h += '<div class="popup-footer">';
+      (opts.botoes || [{texto: 'OK', classe: 'popup-btn-primary', valor: true}]).forEach(function(b) {
+        h += '<button class="popup-btn ' + (b.classe || 'popup-btn-primary') + '" onclick="fecharPopup(' + JSON.stringify(b.valor) + ')">' + b.texto + '</button>';
+      });
+      h += '</div>';
+
+      box.innerHTML = h;
+      ov.classList.add('show');
+
+      // Focar no primeiro input se existir
+      setTimeout(function() {
+        var firstInput = box.querySelector('.popup-input-row input');
+        if (firstInput) firstInput.focus();
+      }, 100);
+
+      // Enter para confirmar no input
+      var inputs = box.querySelectorAll('.popup-input-row input');
+      inputs.forEach(function(inp) {
+        inp.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            var lastBtn = opts.botoes ? opts.botoes[opts.botoes.length - 1] : {valor: true};
+            fecharPopup(lastBtn.valor);
+          }
+        });
+      });
+
+      return new Promise(function(resolve) {
+        _popupResolve = resolve;
+      });
+    }
+
+    function fecharPopup(valor) {
+      var ov = document.getElementById('popupOverlay');
+      ov.classList.remove('show');
+      if (_popupResolve) {
+        _popupResolve(valor);
+        _popupResolve = null;
+      }
+    }
+
+    // Helper: alerta bonito
+    function popupAlerta(titulo, mensagem, tipo) {
+      return mostrarPopup({
+        tipo: tipo || 'error',
+        titulo: titulo,
+        mensagem: mensagem,
+        botoes: [{ texto: 'Entendi', classe: 'popup-btn-primary', valor: true }]
+      });
+    }
+
+    // Helper: prompt bonito com inputs
+    function popupPrompt(titulo, subtitulo, inputs) {
+      return mostrarPopup({
+        tipo: 'input',
+        titulo: titulo,
+        subtitulo: subtitulo,
+        inputs: inputs,
+        botoes: [
+          { texto: 'Cancelar', classe: 'popup-btn-cancel', valor: false },
+          { texto: 'Inserir', classe: 'popup-btn-primary', valor: true }
+        ]
+      });
+    }
+
+  </script>
+
+  <!-- Popup overlay (no body) -->
+  <div id="popupOverlay" class="popup-overlay" onclick="if(event.target===this) fecharPopup(null);">
+    <div id="popupBox" class="popup-box"></div>
+  </div>
+
+</body>
+</html>
