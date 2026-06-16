@@ -1579,83 +1579,73 @@ a {
 }
 
 /* ── Bahia Area ──────────────────────────────────────────────── */
-.bahia-area {
-  padding: 20px 24px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-.bahia-filters {
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  flex-wrap: wrap;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 14px 20px;
-  margin-bottom: 20px;
-}
-.bahia-filter-group {
+.bahia-filtros-bar {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-.bahia-filter-group > label {
-  font-weight: 600;
-  font-size: 12px;
-  color: #555;
-  white-space: nowrap;
-}
-.bahia-charts {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 20px;
-}
-.bahia-chart-card {
+  flex-wrap: wrap;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  padding: 16px 20px 20px;
+  padding: 12px 20px;
+  margin: 20px auto;
+  max-width: 210mm;
+  box-sizing: border-box;
+}
+.bahia-filtro-grupo {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 12px;
-}
-.bahia-chart-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
 }
-.bahia-chart-title {
+.bahia-filtro-label {
   font-weight: 700;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--primary-color);
-}
-.bahia-chart-filter {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
+  cursor: pointer;
+  user-select: none;
+}
+.bahia-filtro-rede {
   font-size: 12px;
-  color: #555;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
 }
-.bahia-chart-filter select {
-  min-width: 130px;
+.bahia-filtro-sep {
+  width: 1px;
+  height: 28px;
+  background: #e5e7eb;
 }
-.bahia-chart-body {
-  height: 320px;
+/* Gráfico inline dentro do bloco de etapa */
+.bahia-chart-inline {
+  height: 200px;
+  margin-top: 14px;
   position: relative;
 }
+/* Layout dos dois gráficos do SAEB (proficiência + IDEB) */
+.bahia-charts-inline {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+.bahia-chart-wide { height: 200px; position: relative; }
+.bahia-chart-narrow { height: 200px; position: relative; }
+
 @media screen and (max-width: 850px) {
-  .bahia-charts {
-    grid-template-columns: 1fr;
-  }
-  .bahia-filters {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .bahia-filtros-bar { flex-direction: column; align-items: flex-start; }
+  .bahia-filtro-sep { display: none; }
+  .bahia-charts-inline { grid-template-columns: 1fr; }
 }
 @media print {
-  .bahia-area .bahia-filters { display: none; }
-  .bahia-chart-card { break-inside: avoid; }
+  .bahia-filtros-bar { display: none; }
+  .bahia-chart-inline,
+  .bahia-chart-wide,
+  .bahia-chart-narrow { break-inside: avoid; }
 }
