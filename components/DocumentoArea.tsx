@@ -6,6 +6,7 @@ import { execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts } from 
 interface DocumentoAreaProps {
   usuarioLogado: string;
   dataFormatada: string;
+  numDoc: string;
 }
 
 const CONTEUDO_INICIAL = `
@@ -21,7 +22,7 @@ const CONTEUDO_INICIAL = `
   <p>Continue editando livremente...</p>
 `;
 
-export default function DocumentoArea({ usuarioLogado, dataFormatada }: DocumentoAreaProps) {
+export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: DocumentoAreaProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -391,9 +392,16 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
             </div>
           </div>
           <div className="header-info">
-            <h1 className="doc-title-editable" id="docTituloEditavel" contentEditable spellCheck suppressContentEditableWarning>
-              DOCUMENTO
-            </h1>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+              <h1 className="doc-title-editable" id="docTituloEditavel" contentEditable spellCheck suppressContentEditableWarning>
+                DOCUMENTO
+              </h1>
+              {numDoc && (
+                <span style={{ fontSize: "16pt", fontWeight: 800, color: "var(--primary-color)" }}>
+                  Nº {numDoc}/2026
+                </span>
+              )}
+            </div>
             <div className="header-meta">
               <div>
                 <strong>SETOR:</strong>{" "}

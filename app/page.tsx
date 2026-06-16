@@ -20,6 +20,7 @@ export default function Home() {
   const [modoAtual, setModoAtual] = useState<Modo>("escola");
   const [searchInput, setSearchInput] = useState("");
   const [numNota, setNumNota] = useState("");
+  const [numDoc, setNumDoc] = useState("");
   const [loading, setLoading] = useState(false);
   const [relatorioVisivel, setRelatorioVisivel] = useState(false);
 
@@ -137,6 +138,8 @@ export default function Home() {
         onBuscar={buscar}
         numNota={numNota}
         onNumNotaChange={setNumNota}
+        numDoc={numDoc}
+        onNumDocChange={setNumDoc}
         checkSabe={checkSabe}
         onCheckSabeChange={setCheckSabe}
         checkSaeb={checkSaeb}
@@ -177,7 +180,7 @@ export default function Home() {
       )}
 
       {modoAtual === "documento" && (
-        <DocumentoArea usuarioLogado={usuarioLogado} dataFormatada={formatarDataAtual()} />
+        <DocumentoArea usuarioLogado={usuarioLogado} dataFormatada={formatarDataAtual()} numDoc={numDoc} />
       )}
 
       <PopupManager />

@@ -10,6 +10,8 @@ interface TopBarProps {
   onBuscar: () => void;
   numNota: string;
   onNumNotaChange: (v: string) => void;
+  numDoc: string;
+  onNumDocChange: (v: string) => void;
   checkSabe: boolean;
   onCheckSabeChange: (v: boolean) => void;
   checkSaeb: boolean;
@@ -37,6 +39,8 @@ export default function TopBar({
   onBuscar,
   numNota,
   onNumNotaChange,
+  numDoc,
+  onNumDocChange,
   checkSabe,
   onCheckSabeChange,
   checkSaeb,
@@ -84,6 +88,19 @@ export default function TopBar({
             📝 Documento
           </button>
         </div>
+
+        {modoAtual === "documento" && (
+          <div className="input-group input-group-sm" style={{ width: 150 }}>
+            <span className="input-group-text">Doc Nº</span>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="000"
+              value={numDoc}
+              onChange={(e) => onNumDocChange(e.target.value)}
+            />
+          </div>
+        )}
 
         {mostraFiltrosDados && (
           <div className="filtros-dados" id="filtrosDados">
