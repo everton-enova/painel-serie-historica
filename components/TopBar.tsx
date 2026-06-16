@@ -117,80 +117,84 @@ export default function TopBar({
               </div>
 
               <div className="checkbox-group">
-                <div className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id="checkSabe"
-                    checked={checkSabe}
-                    onChange={(e) => onCheckSabeChange(e.target.checked)}
-                  />
-                  <label htmlFor="checkSabe">SABE</label>
-                </div>
-                {isMunicipio && checkSabe && (
-                  <div className="sub-checkbox-group" id="filtroRedeSabe">
-                    <div className="sub-checkbox-item">
-                      <input
-                        type="checkbox"
-                        id="checkSabeRedeMunicipal"
-                        checked={checkSabeRedeMunicipal}
-                        onChange={(e) => onCheckSabeRedeMunicipalChange(e.target.checked)}
-                      />
-                      <label htmlFor="checkSabeRedeMunicipal">Municipal</label>
-                    </div>
-                    <div className="sub-checkbox-item">
-                      <input
-                        type="checkbox"
-                        id="checkSabeRedeEstadual"
-                        checked={checkSabeRedeEstadual}
-                        onChange={(e) => onCheckSabeRedeEstadualChange(e.target.checked)}
-                      />
-                      <label htmlFor="checkSabeRedeEstadual">Estadual</label>
-                    </div>
+                <div className="check-block">
+                  <div className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      id="checkSabe"
+                      checked={checkSabe}
+                      onChange={(e) => onCheckSabeChange(e.target.checked)}
+                    />
+                    <label htmlFor="checkSabe">SABE</label>
                   </div>
-                )}
-
-                <span style={{ color: "#ccc", fontSize: 14 }}>|</span>
-
-                <div className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id="checkSaeb"
-                    checked={checkSaeb}
-                    onChange={(e) => onCheckSaebChange(e.target.checked)}
-                  />
-                  <label htmlFor="checkSaeb">Saeb</label>
+                  {isMunicipio && checkSabe && (
+                    <div className="sub-checkbox-group" id="filtroRedeSabe">
+                      <div className="sub-checkbox-item">
+                        <input
+                          type="checkbox"
+                          id="checkSabeRedeMunicipal"
+                          checked={checkSabeRedeMunicipal}
+                          onChange={(e) => onCheckSabeRedeMunicipalChange(e.target.checked)}
+                        />
+                        <label htmlFor="checkSabeRedeMunicipal">Municipal</label>
+                      </div>
+                      <div className="sub-checkbox-item">
+                        <input
+                          type="checkbox"
+                          id="checkSabeRedeEstadual"
+                          checked={checkSabeRedeEstadual}
+                          onChange={(e) => onCheckSabeRedeEstadualChange(e.target.checked)}
+                        />
+                        <label htmlFor="checkSabeRedeEstadual">Estadual</label>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                {isMunicipio && checkSaeb && (
-                  <div className="sub-checkbox-group" id="filtroRedeSaeb">
-                    <div className="sub-checkbox-item">
-                      <input
-                        type="checkbox"
-                        id="checkSaebRedePublica"
-                        checked={checkSaebRedePublica}
-                        onChange={(e) => onCheckSaebRedePublicaChange(e.target.checked)}
-                      />
-                      <label htmlFor="checkSaebRedePublica">Pública</label>
-                    </div>
-                    <div className="sub-checkbox-item">
-                      <input
-                        type="checkbox"
-                        id="checkSaebRedeMunicipal"
-                        checked={checkSaebRedeMunicipal}
-                        onChange={(e) => onCheckSaebRedeMunicipalChange(e.target.checked)}
-                      />
-                      <label htmlFor="checkSaebRedeMunicipal">Municipal</label>
-                    </div>
-                    <div className="sub-checkbox-item">
-                      <input
-                        type="checkbox"
-                        id="checkSaebRedeEstadual"
-                        checked={checkSaebRedeEstadual}
-                        onChange={(e) => onCheckSaebRedeEstadualChange(e.target.checked)}
-                      />
-                      <label htmlFor="checkSaebRedeEstadual">Estadual</label>
-                    </div>
+
+                <span className="check-sep">|</span>
+
+                <div className="check-block">
+                  <div className="checkbox-item">
+                    <input
+                      type="checkbox"
+                      id="checkSaeb"
+                      checked={checkSaeb}
+                      onChange={(e) => onCheckSaebChange(e.target.checked)}
+                    />
+                    <label htmlFor="checkSaeb">Saeb</label>
                   </div>
-                )}
+                  {isMunicipio && checkSaeb && (
+                    <div className="sub-checkbox-group" id="filtroRedeSaeb">
+                      <div className="sub-checkbox-item">
+                        <input
+                          type="checkbox"
+                          id="checkSaebRedePublica"
+                          checked={checkSaebRedePublica}
+                          onChange={(e) => onCheckSaebRedePublicaChange(e.target.checked)}
+                        />
+                        <label htmlFor="checkSaebRedePublica">Pública</label>
+                      </div>
+                      <div className="sub-checkbox-item">
+                        <input
+                          type="checkbox"
+                          id="checkSaebRedeMunicipal"
+                          checked={checkSaebRedeMunicipal}
+                          onChange={(e) => onCheckSaebRedeMunicipalChange(e.target.checked)}
+                        />
+                        <label htmlFor="checkSaebRedeMunicipal">Municipal</label>
+                      </div>
+                      <div className="sub-checkbox-item">
+                        <input
+                          type="checkbox"
+                          id="checkSaebRedeEstadual"
+                          checked={checkSaebRedeEstadual}
+                          onChange={(e) => onCheckSaebRedeEstadualChange(e.target.checked)}
+                        />
+                        <label htmlFor="checkSaebRedeEstadual">Estadual</label>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
