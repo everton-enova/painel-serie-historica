@@ -243,7 +243,7 @@ function BlocoSaebBahia({
         <table className="modern-table">
           <thead>
             <tr>
-              <th colSpan={6}>RESULTADO SAEB/IDEB – {etapa} – REDE {rede}</th>
+              <th colSpan={6}>RESULTADO Saeb/IDEB – {etapa} – REDE {rede}</th>
             </tr>
             <tr className="sub-header">
               <th>Ano</th>
@@ -373,7 +373,7 @@ export default function BahiaArea() {
         <div className="bahia-filtro-grupo">
           <label className="bahia-filtro-label">
             <input type="checkbox" checked={mostrarSaeb} onChange={(e) => setMostrarSaeb(e.target.checked)} />
-            {" "}SAEB/IDEB
+            {" "}Saeb/IDEB
           </label>
           {mostrarSaeb && todasRedesSaeb.map((r) => (
             <label key={r} className="bahia-filtro-rede">
@@ -438,13 +438,16 @@ export default function BahiaArea() {
         {/* SAEB */}
         {mostrarSaeb && saeb.length > 0 && (
           <div id="secaoBahiaSaeb" style={{ marginTop: 30 }}>
-            <div className="section-title">2. RESULTADO DO IDEB/SAEB – BAHIA</div>
+            <div className="section-title">2. RESULTADO DO IDEB/Saeb – BAHIA</div>
             {etapasSaeb.map((etapa) =>
               redesSaeb.map((rede) => {
                 const linhas = saeb.filter(
                   (d) => d.etapa === etapa && d.rede === rede && (!tipoSaeb || d.tipo === tipoSaeb)
                 );
+                // Oculta combinações sem nenhum dado real (ex: EM 3ª série + Municipal)
                 if (linhas.length === 0) return null;
+                const temDados = linhas.some((d) => d.lp !== null || d.mat !== null || d.ideb !== null);
+                if (!temDados) return null;
                 return (
                   <BlocoSaebBahia
                     key={`${etapa}_${rede}_${tipoSaeb}`}

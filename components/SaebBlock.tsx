@@ -21,7 +21,7 @@ export default function SaebBlock({ bloco }: { bloco: Omit<BlocoSaeb, "raw"> }) 
           <thead>
             <tr>
               <th colSpan={9}>
-                RESULTADO SAEB - {etapaExtensa} – REDE {bloco.rede}
+                RESULTADO Saeb - {etapaExtensa} – REDE {bloco.rede}
               </th>
             </tr>
             <tr className="sub-header">
