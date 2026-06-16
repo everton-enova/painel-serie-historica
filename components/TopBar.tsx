@@ -61,7 +61,7 @@ export default function TopBar({
   onSair,
 }: TopBarProps) {
   const isMunicipio = modoAtual === "municipio";
-  const mostraFiltrosDados = modoAtual !== "documento";
+  const mostraFiltrosDados = modoAtual !== "documento" && modoAtual !== "bahia";
   const docNumRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -94,6 +94,12 @@ export default function TopBar({
             onClick={() => onTrocarModo("documento")}
           >
             📝 Documento
+          </button>
+          <button
+            className={`mode-tab ${modoAtual === "bahia" ? "active" : ""}`}
+            onClick={() => onTrocarModo("bahia")}
+          >
+            📊 Bahia
           </button>
         </div>
 

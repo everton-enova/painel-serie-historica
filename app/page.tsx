@@ -6,13 +6,14 @@ import PopupManager from "@/components/PopupManager";
 import TopBar from "@/components/TopBar";
 import RelatorioArea from "@/components/RelatorioArea";
 import DocumentoArea from "@/components/DocumentoArea";
+import BahiaArea from "@/components/BahiaArea";
 import { useSession } from "@/hooks/useSession";
 import { popupAlerta } from "@/lib/popup";
 import { correspondeRede } from "@/lib/normalize";
 import { formatarDataAtual } from "@/lib/formatters";
 import type { BlocoSabe, BlocoSaeb, InfoEntidade, RespostaBusca } from "@/lib/types";
 
-export type Modo = "escola" | "municipio" | "documento";
+export type Modo = "escola" | "municipio" | "documento" | "bahia";
 
 export default function Home() {
   const { usuarioLogado, verificando, entrando, erro, login, sair } = useSession();
@@ -68,7 +69,7 @@ export default function Home() {
 
   function trocarModo(modo: Modo) {
     setModoAtual(modo);
-    if (modo !== "documento") {
+    if (modo !== "documento" && modo !== "bahia") {
       setSearchInput("");
       setDadosSabeAtual([]);
       setDadosSaebAtual([]);
@@ -182,6 +183,8 @@ export default function Home() {
       {modoAtual === "documento" && (
         <DocumentoArea usuarioLogado={usuarioLogado} dataFormatada={formatarDataAtual()} numDoc={numDoc} />
       )}
+
+      {modoAtual === "bahia" && <BahiaArea />}
 
       <PopupManager />
     </div>
