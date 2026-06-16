@@ -395,9 +395,11 @@ function BlocoSaebBahia({ etapa, tipo, rede, dados }: {
           />
         </div>
       </div>
-      {/* Ideb em linha separada */}
-      <div className="bahia-chart-ideb">
-        <Bar data={idebChart} options={barIdebOpts} />
+      {/* Ideb em linha separada, centralizado */}
+      <div className="bahia-chart-ideb-wrap">
+        <div className="bahia-chart-ideb">
+          <Bar data={idebChart} options={barIdebOpts} />
+        </div>
       </div>
       <div className="footer-mini">Fonte: MEC/Inep • Elaboração: SGINF/DIE/CAV</div>
     </div>
