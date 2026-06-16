@@ -13,6 +13,7 @@ import {
   Legend,
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import type { Context as DlContext } from "chartjs-plugin-datalabels";
 import { Line, Bar } from "react-chartjs-2";
 import LogoUpload from "./LogoUpload";
 import { formatarDataAtual } from "@/lib/formatters";
@@ -92,8 +93,18 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
       tooltip: { callbacks: { label: (c: { parsed: { y: number | null } }) => `${c.parsed.y?.toFixed(1) ?? "–"}` } },
       datalabels: {
         display: true,
-        align: "top" as const,
-        anchor: "end" as const,
+        anchor: (ctx: DlContext) => {
+          const vals = ctx.dataset.data as (number | null)[];
+          const next = ctx.dataIndex < vals.length - 1 ? vals[ctx.dataIndex + 1] : null;
+          const curr = vals[ctx.dataIndex];
+          return typeof next === "number" && typeof curr === "number" && next > curr ? "start" : "end";
+        },
+        align: (ctx: DlContext) => {
+          const vals = ctx.dataset.data as (number | null)[];
+          const next = ctx.dataIndex < vals.length - 1 ? vals[ctx.dataIndex + 1] : null;
+          const curr = vals[ctx.dataIndex];
+          return typeof next === "number" && typeof curr === "number" && next > curr ? "bottom" : "top";
+        },
         offset: 6,
         font: { size: 10, weight: "bold" as const },
         color: "white",
@@ -300,31 +311,34 @@ function BlocoSaebBahia({ etapa, tipo, rede, dados }: {
   etapa: string; tipo: string; rede: string; dados: LinhaSaebBahia[];
 }) {
   const sorted = [...dados].sort((a, b) => a.ano - b.ano);
-  const anos = sorted.map((d) => String(d.ano));
 
   const textoAnalise = analiseSaebBahia(etapa, rede, sorted);
 
-  const makeLineChart = (campo: "lp" | "mat", rotulo: string, cor: string) => ({
-    labels: anos,
-    datasets: [{
-      label: rotulo,
-      data: sorted.map((d) => d[campo]),
-      borderColor: cor,
-      backgroundColor: alpha(cor, 0.1),
-      tension: 0.3,
-      fill: true,
-      pointRadius: 5,
-      pointHoverRadius: 7,
-      pointBackgroundColor: cor,
-    }],
-  });
+  const makeLineChart = (campo: "lp" | "mat", rotulo: string, cor: string) => {
+    const filtrados = sorted.filter((d) => d[campo] !== null);
+    return {
+      labels: filtrados.map((d) => String(d.ano)),
+      datasets: [{
+        label: rotulo,
+        data: filtrados.map((d) => d[campo]),
+        borderColor: cor,
+        backgroundColor: alpha(cor, 0.1),
+        tension: 0.3,
+        fill: true,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointBackgroundColor: cor,
+      }],
+    };
+  };
 
+  const idebFiltrado = sorted.filter((d) => d.ideb !== null);
   const idebChart = {
-    labels: anos,
+    labels: idebFiltrado.map((d) => String(d.ano)),
     datasets: [{
       label: "Ideb",
-      data: sorted.map((d) => d.ideb),
-      backgroundColor: sorted.map((_, i) => alpha(PALETA[0], 0.7 + i * 0.03)),
+      data: idebFiltrado.map((d) => d.ideb),
+      backgroundColor: idebFiltrado.map((_, i) => alpha(PALETA[0], 0.7 + i * 0.03)),
       borderColor: PALETA[0],
       borderWidth: 1,
     }],
