@@ -324,8 +324,8 @@ function BlocoSaebBahia({ etapa, tipo, rede, dados }: {
         borderWidth: 2.5,
         tension: 0.3,
         fill: true,
-        pointRadius: 6,
-        pointHoverRadius: 8,
+        pointRadius: 2,
+        pointHoverRadius: 4,
         pointBackgroundColor: cor,
       }],
     };
