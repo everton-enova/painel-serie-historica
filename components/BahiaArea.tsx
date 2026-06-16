@@ -78,39 +78,30 @@ function deveOcultarRedeEtapa(etapa: string, rede: string): boolean {
   return isEM && rede.toUpperCase() !== "ESTADUAL";
 }
 
-// ── Opções comuns de datalabel ────────────────────────────────────────────────
-
-const datalabelLine = {
-  display: true,
-  align: "top" as const,
-  anchor: "end" as const,
-  offset: 4,
-  font: { size: 10, weight: "bold" as const },
-  formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
-};
-
-const datalabelBar = {
-  display: true,
-  anchor: "end" as const,
-  align: "end" as const,
-  offset: 2,
-  font: { size: 10, weight: "bold" as const },
-  color: "#222",
-  formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
-};
-
-// ── Opções de gráfico de linha ────────────────────────────────────────────────
+// ── Opções de gráfico de linha (com datalabel colorido) ──────────────────────
 
 function lineOpts(titulo: string, labelY: string, cor: string) {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    layout: { padding: { top: 20 } },
+    // padding extra no topo para os datalabels não colidirem com o título
+    layout: { padding: { top: 36 } },
     plugins: {
       legend: { display: false },
-      title: { display: true, text: titulo, font: { size: 11, weight: "bold" as const }, color: cor },
+      title: { display: true, text: titulo, font: { size: 12, weight: "bold" as const }, color: cor },
       tooltip: { callbacks: { label: (c: { parsed: { y: number | null } }) => `${c.parsed.y?.toFixed(1) ?? "–"}` } },
-      datalabels: datalabelLine,
+      datalabels: {
+        display: true,
+        align: "top" as const,
+        anchor: "end" as const,
+        offset: 6,
+        font: { size: 10, weight: "bold" as const },
+        color: "white",
+        backgroundColor: cor,
+        borderRadius: 4,
+        padding: { top: 2, bottom: 2, left: 5, right: 5 },
+        formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
+      },
     },
     scales: {
       y: { beginAtZero: false, title: { display: true, text: labelY }, ticks: { precision: 1 } },
@@ -123,12 +114,23 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
 const barIdebOpts = {
   responsive: true,
   maintainAspectRatio: false,
-  layout: { padding: { top: 20 } },
+  layout: { padding: { top: 30 } },
   plugins: {
     legend: { display: false as const },
-    title: { display: true, text: "Ideb", font: { size: 11, weight: "bold" as const } },
+    title: { display: true, text: "Ideb", font: { size: 12, weight: "bold" as const }, color: PALETA[0] },
     tooltip: { callbacks: { label: (c: { parsed: { y: number | null } }) => `Ideb: ${c.parsed.y?.toFixed(1) ?? "–"}` } },
-    datalabels: datalabelBar,
+    datalabels: {
+      display: true,
+      anchor: "end" as const,
+      align: "end" as const,
+      offset: 4,
+      font: { size: 10, weight: "bold" as const },
+      color: "white",
+      backgroundColor: PALETA[0],
+      borderRadius: 4,
+      padding: { top: 2, bottom: 2, left: 5, right: 5 },
+      formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
+    },
   },
   scales: { y: { min: 0, max: 10, title: { display: true, text: "Ideb" }, ticks: { precision: 1 } } },
 };
@@ -282,7 +284,7 @@ function BlocoSabeBahia({ etapa, rede, dados }: {
           <div key={disc} className="bahia-chart-inline">
             <Line
               data={data}
-              options={lineOpts(`Série histórica – ${disc}`, "Proficiência", cor)}
+              options={lineOpts(disc, "Proficiência", cor)}
             />
           </div>
         ))}
