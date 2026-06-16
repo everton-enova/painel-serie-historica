@@ -85,32 +85,33 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    layout: { padding: { top: 22, bottom: 6, left: 4, right: 4 } },
+    layout: { padding: { top: 24, bottom: 6, left: 4, right: 4 } },
     plugins: {
       legend: { display: false },
       title: { display: true, text: titulo, font: { size: 12, weight: "bold" as const }, color: cor },
       tooltip: { callbacks: { label: (c: { parsed: { y: number | null } }) => `${c.parsed.y?.toFixed(1) ?? "–"}` } },
       datalabels: {
-        display: true,
         clamp: true,
         anchor: "end" as const,
+        display: (ctx: DlContext) => {
+          const vals = ctx.dataset.data as (number | null)[];
+          return ctx.dataIndex === 0 || ctx.dataIndex === vals.length - 1;
+        },
         align: (ctx: DlContext) => {
           const vals = ctx.dataset.data as (number | null)[];
-          const i = ctx.dataIndex;
-          if (i === 0) return "right";
-          if (i === vals.length - 1) return "left";
-          return "top";
+          return ctx.dataIndex === 0 ? "right" : "left";
         },
-        offset: 4,
+        offset: 6,
         font: { size: 10, weight: "bold" as const },
         color: cor,
-        backgroundColor: "transparent",
-        padding: 0,
+        backgroundColor: "rgba(255,255,255,0.82)",
+        borderRadius: 3,
+        padding: { top: 1, bottom: 1, left: 4, right: 4 },
         formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
       },
     },
     scales: {
-      y: { beginAtZero: false, grace: "8%", title: { display: true, text: labelY }, ticks: { precision: 1 } },
+      y: { beginAtZero: false, grace: "6%", title: { display: true, text: labelY }, ticks: { precision: 1 } },
     },
   };
 }
@@ -133,8 +134,9 @@ const barIdebOpts = {
       offset: 4,
       font: { size: 10, weight: "bold" as const },
       color: PALETA[0],
-      backgroundColor: "transparent",
-      padding: 0,
+      backgroundColor: "rgba(255,255,255,0.82)",
+      borderRadius: 3,
+      padding: { top: 1, bottom: 1, left: 4, right: 4 },
       formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
     },
   },
@@ -230,11 +232,12 @@ function BlocoSabeBahia({ etapa, rede, dados }: {
           label: disc,
           data: edicoes.map((ed) => dados.find((d) => d.edicao === ed && d.disciplina === disc)?.proficiencia ?? null),
           borderColor: cor,
-          backgroundColor: alpha(cor, 0.1),
+          backgroundColor: alpha(cor, 0.08),
+          borderWidth: 2.5,
           tension: 0.3,
           fill: true,
-          pointRadius: 5,
-          pointHoverRadius: 7,
+          pointRadius: 6,
+          pointHoverRadius: 8,
           pointBackgroundColor: cor,
         }],
       },
@@ -317,11 +320,12 @@ function BlocoSaebBahia({ etapa, tipo, rede, dados }: {
         label: rotulo,
         data: filtrados.map((d) => d[campo]),
         borderColor: cor,
-        backgroundColor: alpha(cor, 0.1),
+        backgroundColor: alpha(cor, 0.08),
+        borderWidth: 2.5,
         tension: 0.3,
         fill: true,
-        pointRadius: 5,
-        pointHoverRadius: 7,
+        pointRadius: 6,
+        pointHoverRadius: 8,
         pointBackgroundColor: cor,
       }],
     };
