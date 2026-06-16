@@ -91,17 +91,17 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
       title: { display: true, text: titulo, font: { size: 12, weight: "bold" as const }, color: cor },
       tooltip: { callbacks: { label: (c: { parsed: { y: number | null } }) => `${c.parsed.y?.toFixed(1) ?? "–"}` } },
       datalabels: {
+        display: true,
         clamp: true,
         anchor: "end" as const,
-        display: (ctx: DlContext) => {
-          const vals = ctx.dataset.data as (number | null)[];
-          return ctx.dataIndex === 0 || ctx.dataIndex === vals.length - 1;
-        },
         align: (ctx: DlContext) => {
           const vals = ctx.dataset.data as (number | null)[];
-          return ctx.dataIndex === 0 ? "right" : "left";
+          const i = ctx.dataIndex;
+          if (i === 0) return "right";
+          if (i === vals.length - 1) return "left";
+          return i % 2 === 0 ? "top" : "bottom";
         },
-        offset: 6,
+        offset: 4,
         font: { size: 10, weight: "bold" as const },
         color: cor,
         backgroundColor: "rgba(255,255,255,0.82)",
@@ -380,7 +380,7 @@ function BlocoSaebBahia({ etapa, tipo, rede, dados }: {
           </tbody>
         </table>
       </div>
-      {/* LP e MAT separados + Ideb */}
+      {/* LP e MAT lado a lado */}
       <div className="bahia-charts-saeb">
         <div className="bahia-chart-inline">
           <Line
@@ -394,9 +394,10 @@ function BlocoSaebBahia({ etapa, tipo, rede, dados }: {
             options={lineOpts("Matemática", "Proficiência", PALETA[2])}
           />
         </div>
-        <div className="bahia-chart-inline">
-          <Bar data={idebChart} options={barIdebOpts} />
-        </div>
+      </div>
+      {/* Ideb em linha separada */}
+      <div className="bahia-chart-ideb">
+        <Bar data={idebChart} options={barIdebOpts} />
       </div>
       <div className="footer-mini">Fonte: MEC/Inep • Elaboração: SGINF/DIE/CAV</div>
     </div>
