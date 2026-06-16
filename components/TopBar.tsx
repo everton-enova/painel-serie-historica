@@ -78,10 +78,10 @@ export default function TopBar({
 
         <div className="mode-tabs">
           <button
-            className={`mode-tab ${modoAtual === "escola" ? "active" : ""}`}
-            onClick={() => onTrocarModo("escola")}
+            className={`mode-tab ${modoAtual === "bahia" ? "active" : ""}`}
+            onClick={() => onTrocarModo("bahia")}
           >
-            🏫 Escola
+            📊 Bahia
           </button>
           <button
             className={`mode-tab ${modoAtual === "municipio" ? "active" : ""}`}
@@ -90,16 +90,16 @@ export default function TopBar({
             🏛️ Município
           </button>
           <button
+            className={`mode-tab ${modoAtual === "escola" ? "active" : ""}`}
+            onClick={() => onTrocarModo("escola")}
+          >
+            🏫 Escola
+          </button>
+          <button
             className={`mode-tab ${modoAtual === "documento" ? "active" : ""}`}
             onClick={() => onTrocarModo("documento")}
           >
             📝 Documento
-          </button>
-          <button
-            className={`mode-tab ${modoAtual === "bahia" ? "active" : ""}`}
-            onClick={() => onTrocarModo("bahia")}
-          >
-            📊 Bahia
           </button>
         </div>
 

@@ -1624,28 +1624,31 @@ a {
 }
 /* Gráfico inline dentro do bloco de etapa */
 .bahia-chart-inline {
-  height: 200px;
-  margin-top: 14px;
+  height: 210px;
   position: relative;
 }
-/* Layout dos dois gráficos do SAEB (proficiência + IDEB) */
-.bahia-charts-inline {
+/* Grid de gráficos SABE: um por disciplina (LP e MAT lado a lado) */
+.bahia-charts-disc {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
   margin-top: 14px;
 }
-.bahia-chart-wide { height: 200px; position: relative; }
-.bahia-chart-narrow { height: 200px; position: relative; }
+/* Grid de gráficos Saeb: LP | MAT | Ideb */
+.bahia-charts-saeb {
+  display: grid;
+  grid-template-columns: 1fr 1fr 0.7fr;
+  gap: 12px;
+  margin-top: 14px;
+}
 
 @media screen and (max-width: 850px) {
   .bahia-filtros-bar { flex-direction: column; align-items: flex-start; }
   .bahia-filtro-sep { display: none; }
-  .bahia-charts-inline { grid-template-columns: 1fr; }
+  .bahia-charts-disc,
+  .bahia-charts-saeb { grid-template-columns: 1fr; }
 }
 @media print {
   .bahia-filtros-bar { display: none; }
-  .bahia-chart-inline,
-  .bahia-chart-wide,
-  .bahia-chart-narrow { break-inside: avoid; }
+  .bahia-chart-inline { break-inside: avoid; }
 }

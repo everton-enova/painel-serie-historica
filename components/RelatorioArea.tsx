@@ -90,7 +90,7 @@ export default function RelatorioArea({
         {mostrarSaeb && (
           <div id="secaoSaeb" style={{ marginTop: 30 }}>
             <div id="conteudoSaeb">
-              <div className="section-title">2. RESULTADO DO IDEB/Saeb – 2023</div>
+              <div className="section-title">2. RESULTADO DO Ideb/Saeb – 2023</div>
               {dadosSaeb.length > 0 ? (
                 dadosSaeb.map((bloco, idx) => <SaebBlock key={idx} bloco={bloco} />)
               ) : (

@@ -29,7 +29,7 @@ export function gerarTextoAnaliseSaeb(etapa: string, rede: string, atual: AnoSae
 
   let texto = `A rede ${rede}, na etapa ${etapa}, `;
   if (!isNaN(idebAtual)) {
-    texto += `apresentou em 2023 um IDEB de ${formatar(idebAtual, 1)}. `;
+    texto += `apresentou em 2023 um Ideb de ${formatar(idebAtual, 1)}. `;
     if (!isNaN(idebAnt)) {
       const diff = idebAtual - idebAnt;
       if (diff > 0) {
@@ -41,7 +41,7 @@ export function gerarTextoAnaliseSaeb(etapa: string, rede: string, atual: AnoSae
       }
     }
   } else {
-    texto += `não teve seu IDEB calculado em 2023.`;
+    texto += `não teve seu Ideb calculado em 2023.`;
   }
   return texto;
 }

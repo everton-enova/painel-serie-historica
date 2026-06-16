@@ -32,7 +32,7 @@ export default function SaebBlock({ bloco }: { bloco: Omit<BlocoSaeb, "raw"> }) 
               <th>Matemática</th>
               <th>Português</th>
               <th>Média (N)</th>
-              <th>IDEB</th>
+              <th>Ideb</th>
             </tr>
           </thead>
           <tbody>
