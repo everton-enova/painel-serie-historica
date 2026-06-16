@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts } from "@/lib/documentoEditor";
 
 interface DocumentoAreaProps {
@@ -23,6 +23,26 @@ const CONTEUDO_INICIAL = `
 
 export default function DocumentoArea({ usuarioLogado, dataFormatada }: DocumentoAreaProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
+
+  function handleLogoClick() {
+    fileInputRef.current?.click();
+  }
+
+  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setLogoSrc(ev.target?.result as string);
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  function handleClearLogo(e: React.MouseEvent) {
+    e.stopPropagation();
+    setLogoSrc(null);
+  }
 
   useEffect(() => {
     if (!editorRef.current) return;
@@ -132,8 +152,32 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
       <div className="doc-editor-area" id="docEditorPage">
         <header className="header-modern">
           <div className="header-logo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-bahia.jpg" alt="Governo da Bahia" style={{ height: "70px", width: "auto" }} />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleLogoChange}
+            />
+            <div
+              className={`logo-upload-wrap${logoSrc ? " logo-selected" : ""}`}
+              onClick={handleLogoClick}
+              title="Clique para trocar a logo"
+            >
+              {logoSrc ? (
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={logoSrc} alt="Logo" className="logo-img-loaded" style={{ height: 70, width: "auto" }} />
+                  <button className="logo-clear-btn visible" onClick={handleClearLogo}>×</button>
+                </>
+              ) : (
+                <div className="logo-placeholder">
+                  <span className="lp-icon">🖼️</span>
+                  <span className="lp-text">Adicionar logo</span>
+                  <span className="lp-sub">clique para subir</span>
+                </div>
+              )}
+            </div>
           </div>
           <div className="header-info">
             <h1 className="doc-title-editable" id="docTituloEditavel" contentEditable spellCheck suppressContentEditableWarning>
