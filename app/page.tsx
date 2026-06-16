@@ -18,7 +18,7 @@ export type Modo = "escola" | "municipio" | "documento" | "bahia";
 export default function Home() {
   const { usuarioLogado, verificando, entrando, erro, login, sair } = useSession();
 
-  const [modoAtual, setModoAtual] = useState<Modo>("escola");
+  const [modoAtual, setModoAtual] = useState<Modo>("bahia");
   const [searchInput, setSearchInput] = useState("");
   const [numNota, setNumNota] = useState("");
   const [numDoc, setNumDoc] = useState("");
