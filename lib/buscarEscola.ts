@@ -83,6 +83,6 @@ export async function buscarDadosEscola(coInep: string): Promise<RespostaBusca> 
     tipo: "escola",
     info,
     historico: processarHistorico(dadosSabeEscola),
-    saeb: historicoSaeb.map(({ raw: _raw, ...resto }) => resto),
+    saeb: historicoSaeb.map(({ raw, ...resto }) => resto),
   };
 }

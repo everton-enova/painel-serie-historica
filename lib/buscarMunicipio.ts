@@ -86,6 +86,6 @@ export async function buscarDadosMunicipio(cdMunicipio: string): Promise<Respost
     tipo: "municipio",
     info,
     historico: processarHistoricoMun(dadosSabeMun),
-    saeb: historicoSaebMun.map(({ raw: _raw, ...resto }) => resto),
+    saeb: historicoSaebMun.map(({ raw, ...resto }) => resto),
   };
 }
