@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts } from "@/lib/documentoEditor";
+import LogoUpload from "./LogoUpload";
 
 interface DocumentoAreaProps {
   usuarioLogado: string;
@@ -24,18 +25,6 @@ const CONTEUDO_INICIAL = `
 
 export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: DocumentoAreaProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const imgRef = useRef<HTMLImageElement>(null);
-
-  // ── Logo ──
-  const [logoSrc, setLogoSrc] = useState<string | null>(null);
-  const [logoW, setLogoW] = useState(160);
-  const [logoH, setLogoH] = useState(70);
-  const [lockAspect, setLockAspect] = useState(true);
-  const stateRef = useRef({ logoW: 160, logoH: 70, lockAspect: true, ratio: 160 / 70 });
-  useEffect(() => { stateRef.current.logoW = logoW; }, [logoW]);
-  useEffect(() => { stateRef.current.logoH = logoH; }, [logoH]);
-  useEffect(() => { stateRef.current.lockAspect = lockAspect; }, [lockAspect]);
 
   // ── HTML popup ──
   const [htmlPopupOpen, setHtmlPopupOpen] = useState(false);
@@ -43,76 +32,6 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
   const [htmlPreview, setHtmlPreview] = useState(false);
   const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
   const savedRangeRef = useRef<Range | null>(null);
-
-  // ── Logo handlers ──
-  function handleLogoClick() { fileInputRef.current?.click(); }
-
-  function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setLogoSrc(ev.target?.result as string);
-    reader.readAsDataURL(file);
-    e.target.value = "";
-  }
-
-  function handleLogoLoad() {
-    const img = imgRef.current;
-    if (!img) return;
-    const ratio = img.naturalWidth / img.naturalHeight;
-    const h = 70;
-    const w = Math.round(h * ratio);
-    stateRef.current.ratio = ratio;
-    setLogoH(h);
-    setLogoW(w);
-  }
-
-  function handleClearLogo(e: React.MouseEvent) {
-    e.stopPropagation();
-    setLogoSrc(null);
-  }
-
-  function handleWChange(val: number) {
-    const v = Math.max(20, val);
-    setLogoW(v);
-    if (stateRef.current.lockAspect) setLogoH(Math.round(v / stateRef.current.ratio));
-  }
-
-  function handleHChange(val: number) {
-    const v = Math.max(10, val);
-    setLogoH(v);
-    if (stateRef.current.lockAspect) setLogoW(Math.round(v * stateRef.current.ratio));
-  }
-
-  function startResize(e: React.PointerEvent<HTMLSpanElement>, handle: string) {
-    e.preventDefault();
-    e.stopPropagation();
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startW = stateRef.current.logoW;
-    const startH = stateRef.current.logoH;
-    function onMove(ev: PointerEvent) {
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
-      let nw = startW, nh = startH;
-      if (handle.includes("e")) nw = Math.max(20, startW + dx);
-      if (handle.includes("w")) nw = Math.max(20, startW - dx);
-      if (handle.includes("s")) nh = Math.max(10, startH + dy);
-      if (handle.includes("n")) nh = Math.max(10, startH - dy);
-      if (stateRef.current.lockAspect) {
-        if (handle === "e" || handle === "w") nh = Math.round(nw / stateRef.current.ratio);
-        else nw = Math.round(nh * stateRef.current.ratio);
-      }
-      setLogoW(nw);
-      setLogoH(nh);
-    }
-    function onUp() {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    }
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
-  }
 
   // ── HTML popup handlers ──
   function salvarCursor() {
@@ -348,49 +267,7 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
 
       <div className="doc-editor-area" id="docEditorPage">
         <header className="header-modern">
-          <div className="header-logo">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleLogoChange}
-            />
-            <div
-              className={`logo-upload-wrap${logoSrc ? " logo-selected" : ""}`}
-              onClick={!logoSrc ? handleLogoClick : undefined}
-              title={!logoSrc ? "Clique para adicionar logo" : undefined}
-            >
-              {logoSrc ? (
-                <>
-                  <div className="logo-size-panel">
-                    <label>W</label>
-                    <input type="number" value={logoW} min={20} onChange={(e) => handleWChange(Number(e.target.value))} onClick={(e) => e.stopPropagation()} />
-                    <label>H</label>
-                    <input type="number" value={logoH} min={10} onChange={(e) => handleHChange(Number(e.target.value))} onClick={(e) => e.stopPropagation()} />
-                    <button className={`ls-lock${lockAspect ? " locked" : ""}`} title={lockAspect ? "Proporção travada" : "Proporção livre"} onClick={(e) => { e.stopPropagation(); setLockAspect((v) => !v); }}>
-                      {lockAspect ? "🔒" : "🔓"}
-                    </button>
-                    <button className="ls-lock" title="Trocar imagem" onClick={(e) => { e.stopPropagation(); handleLogoClick(); }}>
-                      🖼️
-                    </button>
-                  </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img ref={imgRef} src={logoSrc} alt="Logo" className="logo-img-loaded" style={{ width: logoW, height: logoH }} onLoad={handleLogoLoad} />
-                  {(["nw", "ne", "se", "sw", "e", "w"] as const).map((h) => (
-                    <span key={h} className={`logo-resize-handle ${h}`} onPointerDown={(e) => startResize(e, h)} />
-                  ))}
-                  <button className="logo-clear-btn visible" onClick={handleClearLogo}>×</button>
-                </>
-              ) : (
-                <div className="logo-placeholder">
-                  <span className="lp-icon">🖼️</span>
-                  <span className="lp-text">Adicionar logo</span>
-                  <span className="lp-sub">clique para subir</span>
-                </div>
-              )}
-            </div>
-          </div>
+          <LogoUpload />
           <div className="header-info">
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
               <h1 className="doc-title-editable" id="docTituloEditavel" contentEditable spellCheck suppressContentEditableWarning>

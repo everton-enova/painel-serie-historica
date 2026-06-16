@@ -2,6 +2,7 @@ import { formatarDataAtual } from "@/lib/formatters";
 import type { BlocoSabe, BlocoSaeb, InfoEntidade } from "@/lib/types";
 import SabeBlock from "./SabeBlock";
 import SaebBlock from "./SaebBlock";
+import LogoUpload from "./LogoUpload";
 
 interface RelatorioAreaProps {
   info: InfoEntidade;
@@ -28,10 +29,7 @@ export default function RelatorioArea({
     <div id="relatorioArea">
       <div className="nota-tecnica" id="conteudoNota">
         <header className="header-modern">
-          <div className="header-logo">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-bahia.jpg" alt="Governo da Bahia" style={{ height: "70px", width: "auto" }} />
-          </div>
+          <LogoUpload />
           <div className="header-info">
             <h1 className="header-title">
               NOTA TÉCNICA <span id="numNotaDisplay">{numNota || "___"}</span>/2026

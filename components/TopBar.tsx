@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { Modo } from "@/app/page";
 
 interface TopBarProps {
@@ -61,6 +62,13 @@ export default function TopBar({
 }: TopBarProps) {
   const isMunicipio = modoAtual === "municipio";
   const mostraFiltrosDados = modoAtual !== "documento";
+  const docNumRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (modoAtual === "documento") {
+      setTimeout(() => docNumRef.current?.focus(), 50);
+    }
+  }, [modoAtual]);
 
   return (
     <div className="top-bar no-print">
@@ -93,6 +101,7 @@ export default function TopBar({
           <div className="input-group input-group-sm" style={{ width: 150 }}>
             <span className="input-group-text">Doc Nº</span>
             <input
+              ref={docNumRef}
               type="text"
               className="form-control"
               placeholder="000"
