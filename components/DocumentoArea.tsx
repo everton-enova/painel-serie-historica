@@ -24,7 +24,18 @@ const CONTEUDO_INICIAL = `
 export default function DocumentoArea({ usuarioLogado, dataFormatada }: DocumentoAreaProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
+  const [logoW, setLogoW] = useState(160);
+  const [logoH, setLogoH] = useState(70);
+  const [lockAspect, setLockAspect] = useState(true);
+
+  // refs para o drag handler acessar valores atuais sem stale closure
+  const stateRef = useRef({ logoW: 160, logoH: 70, lockAspect: true, ratio: 160 / 70 });
+  useEffect(() => { stateRef.current.logoW = logoW; }, [logoW]);
+  useEffect(() => { stateRef.current.logoH = logoH; }, [logoH]);
+  useEffect(() => { stateRef.current.lockAspect = lockAspect; }, [lockAspect]);
 
   function handleLogoClick() {
     fileInputRef.current?.click();
@@ -39,9 +50,64 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
     e.target.value = "";
   }
 
+  function handleLogoLoad() {
+    const img = imgRef.current;
+    if (!img) return;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const h = 70;
+    const w = Math.round(h * ratio);
+    stateRef.current.ratio = ratio;
+    setLogoH(h);
+    setLogoW(w);
+  }
+
   function handleClearLogo(e: React.MouseEvent) {
     e.stopPropagation();
     setLogoSrc(null);
+  }
+
+  function handleWChange(val: number) {
+    const v = Math.max(20, val);
+    setLogoW(v);
+    if (stateRef.current.lockAspect) setLogoH(Math.round(v / stateRef.current.ratio));
+  }
+
+  function handleHChange(val: number) {
+    const v = Math.max(10, val);
+    setLogoH(v);
+    if (stateRef.current.lockAspect) setLogoW(Math.round(v * stateRef.current.ratio));
+  }
+
+  function startResize(e: React.PointerEvent<HTMLSpanElement>, handle: string) {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = stateRef.current.logoW;
+    const startH = stateRef.current.logoH;
+
+    function onMove(ev: PointerEvent) {
+      const dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      let nw = startW;
+      let nh = startH;
+      if (handle.includes("e")) nw = Math.max(20, startW + dx);
+      if (handle.includes("w")) nw = Math.max(20, startW - dx);
+      if (handle.includes("s")) nh = Math.max(10, startH + dy);
+      if (handle.includes("n")) nh = Math.max(10, startH - dy);
+      if (stateRef.current.lockAspect) {
+        if (handle === "e" || handle === "w") nh = Math.round(nw / stateRef.current.ratio);
+        else nw = Math.round(nh * stateRef.current.ratio);
+      }
+      setLogoW(nw);
+      setLogoH(nh);
+    }
+    function onUp() {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    }
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
   }
 
   useEffect(() => {
@@ -161,13 +227,60 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
             />
             <div
               className={`logo-upload-wrap${logoSrc ? " logo-selected" : ""}`}
-              onClick={handleLogoClick}
-              title="Clique para trocar a logo"
+              onClick={!logoSrc ? handleLogoClick : undefined}
+              title={!logoSrc ? "Clique para adicionar logo" : undefined}
             >
               {logoSrc ? (
                 <>
+                  {/* Caixa de ajuste: aparece quando logo-selected */}
+                  <div className="logo-size-panel">
+                    <label>W</label>
+                    <input
+                      type="number"
+                      value={logoW}
+                      min={20}
+                      onChange={(e) => handleWChange(Number(e.target.value))}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <label>H</label>
+                    <input
+                      type="number"
+                      value={logoH}
+                      min={10}
+                      onChange={(e) => handleHChange(Number(e.target.value))}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <button
+                      className={`ls-lock${lockAspect ? " locked" : ""}`}
+                      title={lockAspect ? "Proporção travada" : "Proporção livre"}
+                      onClick={(e) => { e.stopPropagation(); setLockAspect((v) => !v); }}
+                    >
+                      {lockAspect ? "🔒" : "🔓"}
+                    </button>
+                    <button
+                      className="ls-lock"
+                      title="Trocar imagem"
+                      onClick={(e) => { e.stopPropagation(); handleLogoClick(); }}
+                    >
+                      🖼️
+                    </button>
+                  </div>
+
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={logoSrc} alt="Logo" className="logo-img-loaded" style={{ height: 70, width: "auto" }} />
+                  <img
+                    ref={imgRef}
+                    src={logoSrc}
+                    alt="Logo"
+                    className="logo-img-loaded"
+                    style={{ width: logoW, height: logoH }}
+                    onLoad={handleLogoLoad}
+                  />
+
+                  {/* Alças de resize */}
+                  {(["nw","ne","se","sw","e","w"] as const).map((h) => (
+                    <span key={h} className={`logo-resize-handle ${h}`} onPointerDown={(e) => startResize(e, h)} />
+                  ))}
+
                   <button className="logo-clear-btn visible" onClick={handleClearLogo}>×</button>
                 </>
               ) : (
