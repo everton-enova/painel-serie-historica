@@ -85,24 +85,29 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    // padding extra no topo para os datalabels não colidirem com o título
-    layout: { padding: { top: 36 } },
+    layout: { padding: { top: 40, bottom: 8, left: 4, right: 4 } },
     plugins: {
       legend: { display: false },
       title: { display: true, text: titulo, font: { size: 12, weight: "bold" as const }, color: cor },
       tooltip: { callbacks: { label: (c: { parsed: { y: number | null } }) => `${c.parsed.y?.toFixed(1) ?? "–"}` } },
       datalabels: {
         display: true,
+        clamp: true,
         anchor: (ctx: DlContext) => {
           const vals = ctx.dataset.data as (number | null)[];
-          const next = ctx.dataIndex < vals.length - 1 ? vals[ctx.dataIndex + 1] : null;
-          const curr = vals[ctx.dataIndex];
+          const i = ctx.dataIndex;
+          if (i === 0 || i === vals.length - 1) return "center";
+          const next = vals[i + 1];
+          const curr = vals[i];
           return typeof next === "number" && typeof curr === "number" && next > curr ? "start" : "end";
         },
         align: (ctx: DlContext) => {
           const vals = ctx.dataset.data as (number | null)[];
-          const next = ctx.dataIndex < vals.length - 1 ? vals[ctx.dataIndex + 1] : null;
-          const curr = vals[ctx.dataIndex];
+          const i = ctx.dataIndex;
+          if (i === 0) return "right";
+          if (i === vals.length - 1) return "left";
+          const next = vals[i + 1];
+          const curr = vals[i];
           return typeof next === "number" && typeof curr === "number" && next > curr ? "bottom" : "top";
         },
         offset: 6,
@@ -115,7 +120,7 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
       },
     },
     scales: {
-      y: { beginAtZero: false, title: { display: true, text: labelY }, ticks: { precision: 1 } },
+      y: { beginAtZero: false, grace: "5%", title: { display: true, text: labelY }, ticks: { precision: 1 } },
     },
   };
 }
