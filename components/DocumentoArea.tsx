@@ -26,20 +26,25 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  // ── Logo ──
   const [logoSrc, setLogoSrc] = useState<string | null>(null);
   const [logoW, setLogoW] = useState(160);
   const [logoH, setLogoH] = useState(70);
   const [lockAspect, setLockAspect] = useState(true);
-
-  // refs para o drag handler acessar valores atuais sem stale closure
   const stateRef = useRef({ logoW: 160, logoH: 70, lockAspect: true, ratio: 160 / 70 });
   useEffect(() => { stateRef.current.logoW = logoW; }, [logoW]);
   useEffect(() => { stateRef.current.logoH = logoH; }, [logoH]);
   useEffect(() => { stateRef.current.lockAspect = lockAspect; }, [lockAspect]);
 
-  function handleLogoClick() {
-    fileInputRef.current?.click();
-  }
+  // ── HTML popup ──
+  const [htmlPopupOpen, setHtmlPopupOpen] = useState(false);
+  const [htmlInput, setHtmlInput] = useState("");
+  const [htmlPreview, setHtmlPreview] = useState(false);
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+
+  // ── Logo handlers ──
+  function handleLogoClick() { fileInputRef.current?.click(); }
 
   function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -85,12 +90,10 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
     const startY = e.clientY;
     const startW = stateRef.current.logoW;
     const startH = stateRef.current.logoH;
-
     function onMove(ev: PointerEvent) {
       const dx = ev.clientX - startX;
       const dy = ev.clientY - startY;
-      let nw = startW;
-      let nh = startH;
+      let nw = startW, nh = startH;
       if (handle.includes("e")) nw = Math.max(20, startW + dx);
       if (handle.includes("w")) nw = Math.max(20, startW - dx);
       if (handle.includes("s")) nh = Math.max(10, startH + dy);
@@ -110,9 +113,154 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
     window.addEventListener("pointerup", onUp);
   }
 
+  // ── HTML popup handlers ──
+  function salvarCursor() {
+    const sel = window.getSelection();
+    const ed = editorRef.current;
+    if (sel && sel.rangeCount && ed && ed.contains(sel.anchorNode)) {
+      savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+    } else {
+      savedRangeRef.current = null;
+    }
+  }
+
+  function abrirPopupHtml() {
+    salvarCursor();
+    setEditingBlockId(null);
+    setHtmlInput("");
+    setHtmlPreview(false);
+    setHtmlPopupOpen(true);
+  }
+
+  function fecharPopupHtml() {
+    setHtmlPopupOpen(false);
+    setEditingBlockId(null);
+    setHtmlInput("");
+    setHtmlPreview(false);
+  }
+
+  function executarScripts(container: HTMLElement) {
+    container.querySelectorAll("script").forEach((s) => {
+      const ns = document.createElement("script");
+      if (s.src) ns.src = s.src;
+      else ns.textContent = s.textContent;
+      s.parentNode?.replaceChild(ns, s);
+    });
+  }
+
+  function confirmarHtml() {
+    const html = htmlInput.trim();
+    if (!html) { fecharPopupHtml(); return; }
+
+    // Modo edição: só atualiza o conteúdo do bloco existente
+    if (editingBlockId) {
+      const block = document.getElementById(editingBlockId);
+      const cnt = block?.querySelector(".html-block-content");
+      if (cnt) {
+        cnt.innerHTML = html;
+        executarScripts(cnt as HTMLElement);
+      }
+      fecharPopupHtml();
+      return;
+    }
+
+    // Modo inserção: cria bloco e insere na posição do cursor
+    const ed = editorRef.current;
+    if (!ed) { fecharPopupHtml(); return; }
+
+    const uid = `hb_${Date.now()}`;
+    const bloco = document.createElement("div");
+    bloco.className = "html-block";
+    bloco.contentEditable = "false";
+    bloco.id = uid;
+
+    const bar = document.createElement("div");
+    bar.className = "html-block-bar";
+    bar.innerHTML = `
+      <span>&lt;/&gt; HTML incorporado</span>
+      <button data-action="edit-block">✎ Editar</button>
+      <button class="del-html" data-action="del-block">🗑 Remover</button>
+    `;
+
+    const cnt = document.createElement("div");
+    cnt.className = "html-block-content";
+    cnt.innerHTML = html;
+    executarScripts(cnt);
+
+    bloco.appendChild(bar);
+    bloco.appendChild(cnt);
+
+    const p = document.createElement("p");
+    p.innerHTML = "<br>";
+
+    fecharPopupHtml();
+
+    ed.focus();
+    const savedRange = savedRangeRef.current;
+    if (savedRange) {
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+        const rng = sel.getRangeAt(0);
+        rng.deleteContents();
+        let ref = rng.startContainer as Node;
+        while (ref.parentNode && ref.parentNode !== ed) ref = ref.parentNode;
+        if (ref.parentNode === ed) {
+          ed.insertBefore(p, ref.nextSibling);
+          ed.insertBefore(bloco, p);
+        } else {
+          ed.appendChild(bloco);
+          ed.appendChild(p);
+        }
+      }
+    } else {
+      ed.appendChild(bloco);
+      ed.appendChild(p);
+    }
+
+    // Move cursor para após o bloco
+    const sel2 = window.getSelection();
+    if (sel2) {
+      const rng2 = document.createRange();
+      rng2.setStart(p, 0);
+      rng2.collapse(true);
+      sel2.removeAllRanges();
+      sel2.addRange(rng2);
+    }
+  }
+
+  // ── Efeitos ──
   useEffect(() => {
     if (!editorRef.current) return;
     return setupKeyboardShortcuts(editorRef.current);
+  }, []);
+
+  // Delegação de cliques para editar/remover blocos HTML dentro do editor
+  useEffect(() => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    function handleClick(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      const editBtn = target.closest("[data-action='edit-block']");
+      if (editBtn) {
+        const block = editBtn.closest(".html-block") as HTMLElement;
+        const cnt = block?.querySelector(".html-block-content");
+        if (block && cnt) {
+          setEditingBlockId(block.id);
+          setHtmlInput(cnt.innerHTML);
+          setHtmlPreview(false);
+          setHtmlPopupOpen(true);
+        }
+        return;
+      }
+      const delBtn = target.closest("[data-action='del-block']");
+      if (delBtn) {
+        delBtn.closest(".html-block")?.remove();
+      }
+    }
+    ed.addEventListener("click", handleClick);
+    return () => ed.removeEventListener("click", handleClick);
   }, []);
 
   function comEditor(fn: (editor: HTMLElement) => void) {
@@ -140,78 +288,60 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
             <option value="BLOCKQUOTE">Citação</option>
           </select>
 
-          <div className="tb-sep"></div>
+          <div className="tb-sep" />
 
-          <button onClick={() => comEditor((editor) => execCmd(editor, "bold"))} title="Negrito">
-            <b>N</b>
-          </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "italic"))} title="Itálico">
-            <i>I</i>
-          </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "underline"))} title="Sublinhado">
-            <u>S</u>
-          </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "strikeThrough"))} title="Tachado">
-            <s>T</s>
-          </button>
+          <button onClick={() => comEditor((e) => execCmd(e, "bold"))} title="Negrito"><b>N</b></button>
+          <button onClick={() => comEditor((e) => execCmd(e, "italic"))} title="Itálico"><i>I</i></button>
+          <button onClick={() => comEditor((e) => execCmd(e, "underline"))} title="Sublinhado"><u>S</u></button>
+          <button onClick={() => comEditor((e) => execCmd(e, "strikeThrough"))} title="Tachado"><s>T</s></button>
 
-          <div className="tb-sep"></div>
+          <div className="tb-sep" />
 
-          <button onClick={() => comEditor((editor) => execCmd(editor, "justifyLeft"))} title="Alinhar à esquerda">
-            ⬅
+          <button onClick={() => comEditor((e) => execCmd(e, "justifyLeft"))} title="Alinhar à esquerda">
+            <i className="bi bi-text-left" />
           </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "justifyCenter"))} title="Centralizar">
-            ⬛
+          <button onClick={() => comEditor((e) => execCmd(e, "justifyCenter"))} title="Centralizar">
+            <i className="bi bi-text-center" />
           </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "justifyRight"))} title="Alinhar à direita">
-            ➡
+          <button onClick={() => comEditor((e) => execCmd(e, "justifyRight"))} title="Alinhar à direita">
+            <i className="bi bi-text-right" />
           </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "justifyFull"))} title="Justificar">
-            ☰
+          <button onClick={() => comEditor((e) => execCmd(e, "justifyFull"))} title="Justificar">
+            <i className="bi bi-justify" />
           </button>
 
-          <div className="tb-sep"></div>
+          <div className="tb-sep" />
 
-          <button onClick={() => comEditor((editor) => execCmd(editor, "insertUnorderedList"))} title="Lista com marcadores">
-            • Lista
-          </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "insertOrderedList"))} title="Lista numerada">
-            1. Lista
-          </button>
+          <button onClick={() => comEditor((e) => execCmd(e, "insertUnorderedList"))} title="Lista com marcadores">• Lista</button>
+          <button onClick={() => comEditor((e) => execCmd(e, "insertOrderedList"))} title="Lista numerada">1. Lista</button>
 
-          <div className="tb-sep"></div>
+          <div className="tb-sep" />
 
-          <button onClick={() => comEditor((editor) => execCmd(editor, "indent"))} title="Aumentar recuo">
-            →|
-          </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "outdent"))} title="Diminuir recuo">
-            |←
-          </button>
+          <button onClick={() => comEditor((e) => execCmd(e, "indent"))} title="Aumentar recuo">→|</button>
+          <button onClick={() => comEditor((e) => execCmd(e, "outdent"))} title="Diminuir recuo">|←</button>
 
-          <div className="tb-sep"></div>
+          <div className="tb-sep" />
 
-          <button onClick={() => comEditor((editor) => inserirTabela(editor))} title="Inserir tabela">
-            ▦ Tabela
+          <button onClick={() => comEditor((e) => inserirTabela(e))} title="Inserir tabela">▦ Tabela</button>
+
+          <button
+            onClick={abrirPopupHtml}
+            title="Inserir bloco HTML"
+            style={{ color: "#1d4ed8", fontWeight: 700 }}
+          >
+            &lt;/&gt; HTML
           </button>
 
-          <button onClick={() => comEditor((editor) => execCmd(editor, "insertHorizontalRule"))} title="Linha horizontal">
-            ─
-          </button>
+          <button onClick={() => comEditor((e) => execCmd(e, "insertHorizontalRule"))} title="Linha horizontal">─</button>
 
-          <div className="tb-sep"></div>
+          <div className="tb-sep" />
 
-          <button onClick={() => comEditor((editor) => execCmd(editor, "undo"))} title="Desfazer">
-            ↩
-          </button>
-          <button onClick={() => comEditor((editor) => execCmd(editor, "redo"))} title="Refazer">
-            ↪
-          </button>
+          <button onClick={() => comEditor((e) => execCmd(e, "undo"))} title="Desfazer">↩</button>
+          <button onClick={() => comEditor((e) => execCmd(e, "redo"))} title="Refazer">↪</button>
 
-          <div className="tb-sep"></div>
+          <div className="tb-sep" />
 
-          <button onClick={() => comEditor((editor) => execCmd(editor, "removeFormat"))} title="Limpar formatação">
-            ✕ Limpar
-          </button>
+          <button onClick={() => comEditor((e) => execCmd(e, "removeFormat"))} title="Limpar formatação">✕ Limpar</button>
         </div>
       </div>
 
@@ -232,55 +362,23 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
             >
               {logoSrc ? (
                 <>
-                  {/* Caixa de ajuste: aparece quando logo-selected */}
                   <div className="logo-size-panel">
                     <label>W</label>
-                    <input
-                      type="number"
-                      value={logoW}
-                      min={20}
-                      onChange={(e) => handleWChange(Number(e.target.value))}
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    <input type="number" value={logoW} min={20} onChange={(e) => handleWChange(Number(e.target.value))} onClick={(e) => e.stopPropagation()} />
                     <label>H</label>
-                    <input
-                      type="number"
-                      value={logoH}
-                      min={10}
-                      onChange={(e) => handleHChange(Number(e.target.value))}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <button
-                      className={`ls-lock${lockAspect ? " locked" : ""}`}
-                      title={lockAspect ? "Proporção travada" : "Proporção livre"}
-                      onClick={(e) => { e.stopPropagation(); setLockAspect((v) => !v); }}
-                    >
+                    <input type="number" value={logoH} min={10} onChange={(e) => handleHChange(Number(e.target.value))} onClick={(e) => e.stopPropagation()} />
+                    <button className={`ls-lock${lockAspect ? " locked" : ""}`} title={lockAspect ? "Proporção travada" : "Proporção livre"} onClick={(e) => { e.stopPropagation(); setLockAspect((v) => !v); }}>
                       {lockAspect ? "🔒" : "🔓"}
                     </button>
-                    <button
-                      className="ls-lock"
-                      title="Trocar imagem"
-                      onClick={(e) => { e.stopPropagation(); handleLogoClick(); }}
-                    >
+                    <button className="ls-lock" title="Trocar imagem" onClick={(e) => { e.stopPropagation(); handleLogoClick(); }}>
                       🖼️
                     </button>
                   </div>
-
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    ref={imgRef}
-                    src={logoSrc}
-                    alt="Logo"
-                    className="logo-img-loaded"
-                    style={{ width: logoW, height: logoH }}
-                    onLoad={handleLogoLoad}
-                  />
-
-                  {/* Alças de resize */}
-                  {(["nw","ne","se","sw","e","w"] as const).map((h) => (
+                  <img ref={imgRef} src={logoSrc} alt="Logo" className="logo-img-loaded" style={{ width: logoW, height: logoH }} onLoad={handleLogoLoad} />
+                  {(["nw", "ne", "se", "sw", "e", "w"] as const).map((h) => (
                     <span key={h} className={`logo-resize-handle ${h}`} onPointerDown={(e) => startResize(e, h)} />
                   ))}
-
                   <button className="logo-clear-btn visible" onClick={handleClearLogo}>×</button>
                 </>
               ) : (
@@ -335,6 +433,53 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada }: Document
           </span>
         </div>
       </div>
+
+      {/* ── Popup HTML incorporado ── */}
+      {htmlPopupOpen && (
+        <div
+          className="html-popup-overlay show"
+          onClick={(e) => { if (e.target === e.currentTarget) fecharPopupHtml(); }}
+        >
+          <div className="html-popup-box">
+            <div className="html-popup-header">
+              <h3>&lt;/&gt; &nbsp;{editingBlockId ? "Editar bloco HTML" : "Inserir bloco HTML"}</h3>
+              <span>O HTML será renderizado inline no documento</span>
+            </div>
+
+            <div className="html-popup-tabs">
+              <button className={`html-popup-tab${!htmlPreview ? " active" : ""}`} onClick={() => setHtmlPreview(false)}>
+                Código HTML
+              </button>
+              <button className={`html-popup-tab${htmlPreview ? " active" : ""}`} onClick={() => setHtmlPreview(true)}>
+                Pré-visualização
+              </button>
+            </div>
+
+            <div className="html-popup-body">
+              {!htmlPreview ? (
+                <textarea
+                  placeholder={"Cole seu HTML aqui.\nEx: <table>...</table>\n    <div style=\"...\">...</div>"}
+                  value={htmlInput}
+                  onChange={(e) => setHtmlInput(e.target.value)}
+                  autoFocus
+                />
+              ) : (
+                <div className="preview-area" dangerouslySetInnerHTML={{ __html: htmlInput }} />
+              )}
+            </div>
+
+            <div className="html-popup-footer">
+              <button className="btn-cancel" onClick={fecharPopupHtml}>Cancelar</button>
+              <button className="btn-preview" onClick={() => setHtmlPreview((v) => !v)}>
+                {htmlPreview ? "← Código" : "Pré-visualizar"}
+              </button>
+              <button className="btn-insert" onClick={confirmarHtml}>
+                {editingBlockId ? "Atualizar bloco" : "Inserir no documento"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
