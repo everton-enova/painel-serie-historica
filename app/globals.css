@@ -1624,7 +1624,7 @@ a {
 }
 /* Gráfico inline dentro do bloco de etapa */
 .bahia-chart-inline {
-  height: 210px;
+  height: 260px;
   position: relative;
   min-width: 0;
 }

@@ -85,7 +85,7 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
   return {
     responsive: true,
     maintainAspectRatio: false,
-    layout: { padding: { top: 40, bottom: 8, left: 4, right: 4 } },
+    layout: { padding: { top: 22, bottom: 6, left: 4, right: 4 } },
     plugins: {
       legend: { display: false },
       title: { display: true, text: titulo, font: { size: 12, weight: "bold" as const }, color: cor },
@@ -93,34 +93,24 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
       datalabels: {
         display: true,
         clamp: true,
-        anchor: (ctx: DlContext) => {
-          const vals = ctx.dataset.data as (number | null)[];
-          const i = ctx.dataIndex;
-          if (i === 0 || i === vals.length - 1) return "center";
-          const next = vals[i + 1];
-          const curr = vals[i];
-          return typeof next === "number" && typeof curr === "number" && next > curr ? "start" : "end";
-        },
+        anchor: "end" as const,
         align: (ctx: DlContext) => {
           const vals = ctx.dataset.data as (number | null)[];
           const i = ctx.dataIndex;
           if (i === 0) return "right";
           if (i === vals.length - 1) return "left";
-          const next = vals[i + 1];
-          const curr = vals[i];
-          return typeof next === "number" && typeof curr === "number" && next > curr ? "bottom" : "top";
+          return "top";
         },
-        offset: 6,
+        offset: 4,
         font: { size: 10, weight: "bold" as const },
-        color: "white",
-        backgroundColor: cor,
-        borderRadius: 4,
-        padding: { top: 2, bottom: 2, left: 5, right: 5 },
+        color: cor,
+        backgroundColor: "transparent",
+        padding: 0,
         formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
       },
     },
     scales: {
-      y: { beginAtZero: false, grace: "5%", title: { display: true, text: labelY }, ticks: { precision: 1 } },
+      y: { beginAtZero: false, grace: "8%", title: { display: true, text: labelY }, ticks: { precision: 1 } },
     },
   };
 }
@@ -130,25 +120,25 @@ function lineOpts(titulo: string, labelY: string, cor: string) {
 const barIdebOpts = {
   responsive: true,
   maintainAspectRatio: false,
-  layout: { padding: { top: 30 } },
+  layout: { padding: { top: 20, bottom: 6, left: 4, right: 4 } },
   plugins: {
     legend: { display: false as const },
     title: { display: true, text: "Ideb", font: { size: 12, weight: "bold" as const }, color: PALETA[0] },
     tooltip: { callbacks: { label: (c: { parsed: { y: number | null } }) => `Ideb: ${c.parsed.y?.toFixed(1) ?? "–"}` } },
     datalabels: {
       display: true,
+      clamp: true,
       anchor: "end" as const,
       align: "end" as const,
       offset: 4,
       font: { size: 10, weight: "bold" as const },
-      color: "white",
-      backgroundColor: PALETA[0],
-      borderRadius: 4,
-      padding: { top: 2, bottom: 2, left: 5, right: 5 },
+      color: PALETA[0],
+      backgroundColor: "transparent",
+      padding: 0,
       formatter: (v: number | null) => v != null ? v.toFixed(1).replace(".", ",") : "",
     },
   },
-  scales: { y: { min: 0, max: 10, title: { display: true, text: "Ideb" }, ticks: { precision: 1 } } },
+  scales: { y: { min: 0, max: 10, grace: "5%", title: { display: true, text: "Ideb" }, ticks: { precision: 1 } } },
 };
 
 // ── Textos de análise ─────────────────────────────────────────────────────────
