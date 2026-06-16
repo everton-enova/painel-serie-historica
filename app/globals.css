@@ -1626,6 +1626,7 @@ a {
 .bahia-chart-inline {
   height: 210px;
   position: relative;
+  min-width: 0;
 }
 /* Grid de gráficos SABE: um por disciplina (LP e MAT lado a lado) */
 .bahia-charts-disc {
