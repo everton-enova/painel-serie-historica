@@ -1,4 +1,4 @@
-import { chaveCanonica, ordemChave } from "./normalize";
+import { chaveCanonica, normalizarTexto, ordemChave } from "./normalize";
 import { calcularPadrao } from "./padrao";
 import { COLUNAS, COLUNAS_SABE_MUN } from "./constants";
 import type { BlocoSabe, LinhaSabe, SheetRow } from "./types";
@@ -69,8 +69,14 @@ export function processarHistoricoGenerico(dados: SheetRow[], C: ColMapSabe): Bl
           const lpAnt = dadosAnt.find((d) => /PORTUGU|LP/.test(String(d[C.DISCIPLINA]).toUpperCase()));
           const mtAnt = dadosAnt.find((d) => /MATEM|MT/.test(String(d[C.DISCIPLINA]).toUpperCase()));
 
-          if (lp && lpAnt) diffLp = (Number(lp[C.PROFICIENCIA]) - Number(lpAnt[C.PROFICIENCIA])).toFixed(1);
-          if (mt && mtAnt) diffMt = (Number(mt[C.PROFICIENCIA]) - Number(mtAnt[C.PROFICIENCIA])).toFixed(1);
+          // 2° ano passou a usar a escala Saeb (média 750, dp 50) a partir de 2023;
+          // proficiência de 2022 não é comparável às edições seguintes nessa etapa.
+          const escalaQuebrada = normalizarTexto(etapaNome).includes("2 ANO") && edicaoAnt < 2023 && edicao >= 2023;
+
+          if (!escalaQuebrada) {
+            if (lp && lpAnt) diffLp = (Number(lp[C.PROFICIENCIA]) - Number(lpAnt[C.PROFICIENCIA])).toFixed(1);
+            if (mt && mtAnt) diffMt = (Number(mt[C.PROFICIENCIA]) - Number(mtAnt[C.PROFICIENCIA])).toFixed(1);
+          }
 
           let pAt = lp ? Number(lp[C.PARTICIPACAO]) : mt ? Number(mt[C.PARTICIPACAO]) : 0;
           let pAn = lpAnt ? Number(lpAnt[C.PARTICIPACAO]) : mtAnt ? Number(mtAnt[C.PARTICIPACAO]) : 0;

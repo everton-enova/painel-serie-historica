@@ -17,6 +17,7 @@ import type { Context as DlContext } from "chartjs-plugin-datalabels";
 import { Line, Bar } from "react-chartjs-2";
 import LogoUpload from "./LogoUpload";
 import { formatarDataAtual } from "@/lib/formatters";
+import { normalizarTexto } from "@/lib/normalize";
 
 ChartJS.register(
   CategoryScale, LinearScale,
@@ -220,28 +221,36 @@ function BlocoSabeBahia({ etapa, rede, dados }: {
 
   const textoAnalise = analiseSabeBahia(etapa, rede, dados, disciplinas);
 
+  // 2° ano passou a usar a escala Saeb (média 750, dp 50) a partir de 2023;
+  // a proficiência de 2022 não é comparável, então a linha do gráfico não conecta os dois pontos.
+  const isSegundoAno = normalizarTexto(etapa).includes("2 ANO");
+  const ANO_QUEBRA_ESCALA = 2023;
+
   // Um gráfico por disciplina
   const graficos = disciplinas.map((disc, i) => {
     const cor = PALETA[i] ?? PALETA[0];
-    return {
-      disc,
-      cor,
-      data: {
-        labels: edicoes,
-        datasets: [{
-          label: disc,
-          data: edicoes.map((ed) => dados.find((d) => d.edicao === ed && d.disciplina === disc)?.proficiencia ?? null),
-          borderColor: cor,
-          backgroundColor: alpha(cor, 0.08),
-          borderWidth: 2.5,
-          tension: 0.3,
-          fill: true,
-          pointRadius: 2,
-          pointHoverRadius: 4,
-          pointBackgroundColor: cor,
-        }],
-      },
+    const valores = edicoes.map((ed) => dados.find((d) => d.edicao === ed && d.disciplina === disc)?.proficiencia ?? null);
+
+    const baseDataset = {
+      label: disc,
+      borderColor: cor,
+      backgroundColor: alpha(cor, 0.08),
+      borderWidth: 2.5,
+      tension: 0.3,
+      fill: true,
+      pointRadius: 2,
+      pointHoverRadius: 4,
+      pointBackgroundColor: cor,
     };
+
+    const datasets = isSegundoAno
+      ? [
+          { ...baseDataset, data: valores.map((v, idx) => (Number(edicoes[idx]) < ANO_QUEBRA_ESCALA ? v : null)) },
+          { ...baseDataset, data: valores.map((v, idx) => (Number(edicoes[idx]) >= ANO_QUEBRA_ESCALA ? v : null)) },
+        ]
+      : [{ ...baseDataset, data: valores }];
+
+    return { disc, cor, data: { labels: edicoes, datasets } };
   });
 
   return (
