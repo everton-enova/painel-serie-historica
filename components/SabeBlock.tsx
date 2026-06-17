@@ -84,6 +84,11 @@ export default function SabeBlock({ bloco }: { bloco: BlocoSabe }) {
           ⚠ Os dados do SABE 2025 são <strong>preliminares</strong> e estão sujeitos a possíveis alterações.
         </div>
       )}
+      {bloco.temQuebraEscala && (
+        <div className="nota-preliminar">
+          ⚠ A variação de 2022 para 2023 não é exibida pois, a partir de 2023, o 2° ano passou a usar a escala Saeb (média 750, dp 50). As proficiências não são comparáveis entre os dois períodos.
+        </div>
+      )}
     </div>
   );
 }

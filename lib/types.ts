@@ -13,6 +13,7 @@ export interface BlocoSabe {
   rede: string;
   linhas: LinhaSabe[];
   temPreliminar: boolean;
+  temQuebraEscala: boolean;
 }
 
 export interface AnoSaeb {

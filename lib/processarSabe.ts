@@ -47,6 +47,15 @@ export function processarHistoricoGenerico(dados: SheetRow[], C: ColMapSabe): Bl
       const edicoesUnicas = [...new Set(dadosEtapa.map((d) => Number(d[C.EDICAO])))].sort((a, b) => a - b);
       const linhasTabela: LinhaSabe[] = [];
 
+      // 2° ano passou a usar a escala Saeb (média 750, dp 50) a partir de 2023;
+      // proficiência de 2022 não é comparável às edições seguintes nessa etapa.
+      const ANO_QUEBRA_ESCALA = 2023;
+      const isSegundoAno = normalizarTexto(etapaNome).includes("2 ANO");
+      const temQuebraEscala =
+        isSegundoAno &&
+        edicoesUnicas.some((ed) => ed < ANO_QUEBRA_ESCALA) &&
+        edicoesUnicas.some((ed) => ed >= ANO_QUEBRA_ESCALA);
+
       edicoesUnicas.forEach((edicao, idx) => {
         const dadosAno = dadosEtapa.filter((d) => Number(d[C.EDICAO]) === edicao);
         const lp = dadosAno.find((d) => /PORTUGU|LP/.test(String(d[C.DISCIPLINA]).toUpperCase()));
@@ -69,9 +78,7 @@ export function processarHistoricoGenerico(dados: SheetRow[], C: ColMapSabe): Bl
           const lpAnt = dadosAnt.find((d) => /PORTUGU|LP/.test(String(d[C.DISCIPLINA]).toUpperCase()));
           const mtAnt = dadosAnt.find((d) => /MATEM|MT/.test(String(d[C.DISCIPLINA]).toUpperCase()));
 
-          // 2° ano passou a usar a escala Saeb (média 750, dp 50) a partir de 2023;
-          // proficiência de 2022 não é comparável às edições seguintes nessa etapa.
-          const escalaQuebrada = normalizarTexto(etapaNome).includes("2 ANO") && edicaoAnt < 2023 && edicao >= 2023;
+          const escalaQuebrada = isSegundoAno && edicaoAnt < ANO_QUEBRA_ESCALA && edicao >= ANO_QUEBRA_ESCALA;
 
           if (!escalaQuebrada) {
             if (lp && lpAnt) diffLp = (Number(lp[C.PROFICIENCIA]) - Number(lpAnt[C.PROFICIENCIA])).toFixed(1);
@@ -105,6 +112,7 @@ export function processarHistoricoGenerico(dados: SheetRow[], C: ColMapSabe): Bl
         rede,
         linhas: linhasTabela,
         temPreliminar: linhasTabela.some((l) => l.preliminar),
+        temQuebraEscala,
       });
     });
 

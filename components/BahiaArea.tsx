@@ -225,6 +225,10 @@ function BlocoSabeBahia({ etapa, rede, dados }: {
   // a proficiência de 2022 não é comparável, então a linha do gráfico não conecta os dois pontos.
   const isSegundoAno = normalizarTexto(etapa).includes("2 ANO");
   const ANO_QUEBRA_ESCALA = 2023;
+  const temQuebraEscala =
+    isSegundoAno &&
+    edicoes.some((ed) => Number(ed) < ANO_QUEBRA_ESCALA) &&
+    edicoes.some((ed) => Number(ed) >= ANO_QUEBRA_ESCALA);
 
   // Um gráfico por disciplina
   const graficos = disciplinas.map((disc, i) => {
@@ -307,6 +311,11 @@ function BlocoSabeBahia({ etapa, rede, dados }: {
           </div>
         ))}
       </div>
+      {temQuebraEscala && (
+        <div className="nota-preliminar">
+          ⚠ O ponto de 2022 aparece isolado pois, a partir de 2023, o 2° ano passou a usar a escala Saeb (média 750, dp 50). As proficiências não são comparáveis entre os dois períodos.
+        </div>
+      )}
       <div className="footer-mini">Fonte: Portal SABE • Elaboração: SGINF/DIE/CAV</div>
     </div>
   );
