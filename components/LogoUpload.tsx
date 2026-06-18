@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 export default function LogoUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
-  const [logoSrc, setLogoSrc] = useState<string | null>(null);
+  const [logoSrc, setLogoSrc] = useState<string | null>("/logo_estado.png");
   const [logoW, setLogoW] = useState(160);
   const [logoH, setLogoH] = useState(70);
   const [lockAspect, setLockAspect] = useState(true);
