@@ -637,7 +637,7 @@ a {
   outline: none;
   font-size: 10pt;
   line-height: 1.7;
-  color: #333;
+  color: #000;
 }
 .doc-body-editable:focus {
   outline: none;
@@ -660,7 +660,7 @@ a {
 .doc-body-editable h3 {
   font-size: 10.5pt;
   font-weight: 700;
-  color: #333;
+  color: #000;
   margin: 14px 0 6px 0;
 }
 .doc-body-editable p {
@@ -724,7 +724,7 @@ a {
   padding: 8px 15px;
   background: #f8f9fa;
   font-style: italic;
-  color: #555;
+  color: #000;
 }
 .doc-title-editable {
   font-size: 16pt;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts } from "@/lib/documentoEditor";
+import { aplicarTamanhoFonte, execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts, TAMANHOS_FONTE } from "@/lib/documentoEditor";
 import LogoUpload from "./LogoUpload";
 
 interface DocumentoAreaProps {
@@ -206,6 +206,21 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
             <option value="H2">Título 2</option>
             <option value="H3">Título 3</option>
             <option value="BLOCKQUOTE">Citação</option>
+          </select>
+
+          <select
+            id="fontSize"
+            title="Tamanho da fonte"
+            defaultValue=""
+            onChange={(e) => {
+              comEditor((editor) => aplicarTamanhoFonte(editor, e.target.value));
+              e.target.value = "";
+            }}
+          >
+            <option value="">Tamanho...</option>
+            {TAMANHOS_FONTE.map((t) => (
+              <option key={t} value={t}>{t}</option>
+            ))}
           </select>
 
           <div className="tb-sep" />

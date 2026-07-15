@@ -11,6 +11,31 @@ export function execFormatBlock(editor: HTMLElement, tag: string) {
   editor.focus();
 }
 
+/** Tamanhos de fonte predefinidos (em pt) para o seletor da barra de ferramentas. */
+export const TAMANHOS_FONTE = ["8pt", "9pt", "10pt", "11pt", "12pt", "14pt", "16pt", "18pt", "24pt", "36pt"];
+
+/**
+ * Aplica um tamanho de fonte à seleção atual.
+ * Usa o truque do fontSize="7" como marcador e depois substitui pelo
+ * font-size em pt desejado, funcionando com seleções parciais.
+ */
+export function aplicarTamanhoFonte(editor: HTMLElement, tamanho: string) {
+  if (!tamanho) return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) {
+    editor.focus();
+    return;
+  }
+  document.execCommand("styleWithCSS", false, "true");
+  document.execCommand("fontSize", false, "7");
+  editor.querySelectorAll('font[size="7"]').forEach((el) => {
+    const font = el as HTMLElement;
+    font.removeAttribute("size");
+    font.style.fontSize = tamanho;
+  });
+  editor.focus();
+}
+
 export async function inserirTabela(editor: HTMLElement) {
   const confirmou = await popupPrompt("Inserir Tabela", "Defina as dimensões da tabela", [
     { id: "linhas", label: "Linhas", placeholder: "3", valor: "3" },
