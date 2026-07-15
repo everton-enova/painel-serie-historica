@@ -36,6 +36,31 @@ export function aplicarTamanhoFonte(editor: HTMLElement, tamanho: string) {
   editor.focus();
 }
 
+/** Cores predefinidas para o seletor de cor do texto. */
+export const CORES_TEXTO = [
+  "#000000",
+  "#002060",
+  "#c62828",
+  "#1565c0",
+  "#2e7d32",
+  "#ef6c00",
+  "#6a1b9a",
+  "#555555",
+];
+
+/** Aplica uma cor de fonte à seleção atual. */
+export function aplicarCorTexto(editor: HTMLElement, cor: string) {
+  if (!cor) return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) {
+    editor.focus();
+    return;
+  }
+  document.execCommand("styleWithCSS", false, "true");
+  document.execCommand("foreColor", false, cor);
+  editor.focus();
+}
+
 export async function inserirTabela(editor: HTMLElement) {
   const confirmou = await popupPrompt("Inserir Tabela", "Defina as dimensões da tabela", [
     { id: "linhas", label: "Linhas", placeholder: "3", valor: "3" },
