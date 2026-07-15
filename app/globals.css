@@ -623,6 +623,49 @@ a {
   background: #fff;
   cursor: pointer;
 }
+.doc-toolbar .tb-cores {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.doc-toolbar .tb-cor-swatch {
+  min-width: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.doc-toolbar .tb-cor-swatch:hover {
+  transform: scale(1.12);
+  border-color: #666;
+  background: inherit;
+}
+.doc-toolbar .tb-cor-custom {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 24px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #444;
+  cursor: pointer;
+}
+.doc-toolbar .tb-cor-custom:hover {
+  background: #e8edf4;
+  border-color: #ccc;
+}
+.doc-toolbar .tb-cor-custom input[type="color"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
 .doc-editor-area {
   background: white;
   width: 210mm;

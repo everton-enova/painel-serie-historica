@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { aplicarTamanhoFonte, execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts, TAMANHOS_FONTE } from "@/lib/documentoEditor";
+import { aplicarCorTexto, aplicarTamanhoFonte, CORES_TEXTO, execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts, TAMANHOS_FONTE } from "@/lib/documentoEditor";
 import LogoUpload from "./LogoUpload";
 
 interface DocumentoAreaProps {
@@ -222,6 +222,31 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
+
+          <div className="tb-sep" />
+
+          <div className="tb-cores" title="Cor do texto">
+            {CORES_TEXTO.map((cor) => (
+              <button
+                key={cor}
+                type="button"
+                className="tb-cor-swatch"
+                style={{ background: cor }}
+                title={cor}
+                aria-label={`Cor ${cor}`}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => comEditor((editor) => aplicarCorTexto(editor, cor))}
+              />
+            ))}
+            <label className="tb-cor-custom" title="Cor personalizada">
+              <i className="bi bi-palette" />
+              <input
+                type="color"
+                onMouseDown={(e) => e.stopPropagation()}
+                onChange={(e) => comEditor((editor) => aplicarCorTexto(editor, e.target.value))}
+              />
+            </label>
+          </div>
 
           <div className="tb-sep" />
 
