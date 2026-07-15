@@ -218,6 +218,7 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
             }}
           >
             <option value="">Tamanho...</option>
+            <option value="padrao">Padrão (10pt)</option>
             {TAMANHOS_FONTE.map((t) => (
               <option key={t} value={t}>{t}</option>
             ))}

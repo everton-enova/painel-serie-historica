@@ -30,10 +30,12 @@ export function aplicarTamanhoFonte(editor: HTMLElement, tamanho: string) {
   // usado como marcador para depois aplicar o tamanho em pt desejado.
   document.execCommand("styleWithCSS", false, "false");
   document.execCommand("fontSize", false, "7");
+  // "padrao" remove o tamanho explícito, voltando ao tamanho padrão do documento.
+  const valor = tamanho === "padrao" ? "" : tamanho;
   editor.querySelectorAll('font[size="7"]').forEach((el) => {
     const font = el as HTMLElement;
     font.removeAttribute("size");
-    font.style.fontSize = tamanho;
+    font.style.fontSize = valor;
   });
   editor.focus();
 }
