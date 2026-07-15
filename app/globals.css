@@ -688,7 +688,7 @@ a {
 .doc-body-editable h1 {
   font-size: 14pt;
   font-weight: 800;
-  color: var(--primary-color);
+  color: #000;
   text-transform: uppercase;
   margin: 20px 0 10px 0;
   border-bottom: 1px solid #ddd;
@@ -697,7 +697,7 @@ a {
 .doc-body-editable h2 {
   font-size: 12pt;
   font-weight: 700;
-  color: var(--primary-color);
+  color: #000;
   margin: 18px 0 8px 0;
 }
 .doc-body-editable h3 {

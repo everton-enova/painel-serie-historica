@@ -26,7 +26,9 @@ export function aplicarTamanhoFonte(editor: HTMLElement, tamanho: string) {
     editor.focus();
     return;
   }
-  document.execCommand("styleWithCSS", false, "true");
+  // styleWithCSS = false garante que o comando gere <font size="7">,
+  // usado como marcador para depois aplicar o tamanho em pt desejado.
+  document.execCommand("styleWithCSS", false, "false");
   document.execCommand("fontSize", false, "7");
   editor.querySelectorAll('font[size="7"]').forEach((el) => {
     const font = el as HTMLElement;
