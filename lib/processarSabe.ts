@@ -100,7 +100,7 @@ export function processarHistoricoGenerico(dados: SheetRow[], C: ColMapSabe): Bl
 
         linhasTabela.push({
           edicao,
-          preliminar: edicao === 2025,
+          preliminar: false,
           lp: { nota: lp ? parseFloat(String(lp[C.PROFICIENCIA])).toFixed(1) : "-", diff: diffLp, padrao: padraoLp },
           mt: { nota: mt ? parseFloat(String(mt[C.PROFICIENCIA])).toFixed(1) : "-", diff: diffMt, padrao: padraoMt },
           participacao: { percentual: participacao, diff: diffPart },
