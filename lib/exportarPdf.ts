@@ -9,28 +9,32 @@ export async function gerarPdfBase64(elementoId: string): Promise<string> {
 
   const { default: html2pdf } = await import("html2pdf.js");
 
-  const dataUri: string = await html2pdf()
-    .set({
-      margin: [15, 0, 15, 0],
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        onclone: (doc: Document) => {
-          const alvo = doc.getElementById(elementoId);
-          if (!alvo) return;
-          alvo.querySelectorAll(".no-print, .doc-toolbar").forEach((el) => el.remove());
-          alvo.style.boxShadow = "none";
-          alvo.style.border = "none";
-          alvo.style.margin = "0 auto";
-          alvo.style.paddingTop = "0";
-          alvo.style.paddingBottom = "0";
-        },
+  // Opções em variável (não literal inline) porque o type.d.ts do html2pdf.js
+  // não declara `pagebreak`, embora a biblioteca suporte a opção.
+  const opcoes = {
+    margin: [15, 0, 15, 0] as [number, number, number, number],
+    image: { type: "jpeg" as const, quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      onclone: (doc: Document) => {
+        const alvo = doc.getElementById(elementoId);
+        if (!alvo) return;
+        alvo.querySelectorAll(".no-print, .doc-toolbar").forEach((el) => el.remove());
+        alvo.style.boxShadow = "none";
+        alvo.style.border = "none";
+        alvo.style.margin = "0 auto";
+        alvo.style.paddingTop = "0";
+        alvo.style.paddingBottom = "0";
       },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] },
-    })
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" as const },
+    pagebreak: { mode: ["css", "legacy"] },
+  };
+
+  const dataUri: string = await html2pdf()
+    .set(opcoes)
     .from(elemento)
     .outputPdf("datauristring");
 
