@@ -29,6 +29,8 @@ interface TopBarProps {
   onCheckSaebRedeEstadualChange: (v: boolean) => void;
   usuarioLogado: string;
   onImprimir: () => void;
+  onSalvarDrive: () => void;
+  salvandoDrive: boolean;
   onSair: () => void;
 }
 
@@ -58,6 +60,8 @@ export default function TopBar({
   onCheckSaebRedeEstadualChange,
   usuarioLogado,
   onImprimir,
+  onSalvarDrive,
+  salvandoDrive,
   onSair,
 }: TopBarProps) {
   const isMunicipio = modoAtual === "municipio";
@@ -239,6 +243,9 @@ export default function TopBar({
         </span>
         <button className="btn btn-success btn-sm fw-bold" onClick={onImprimir}>
           🖨️ PDF / IMPRIMIR
+        </button>
+        <button className="btn btn-primary btn-sm fw-bold" onClick={onSalvarDrive} disabled={salvandoDrive}>
+          {salvandoDrive ? "⏳ Salvando..." : "☁️ SALVAR NO DRIVE"}
         </button>
         <button className="btn btn-outline-danger btn-sm" onClick={onSair}>
           Sair

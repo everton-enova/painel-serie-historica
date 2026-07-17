@@ -24,6 +24,7 @@ export default function Home() {
   const [numDoc, setNumDoc] = useState("");
   const [loading, setLoading] = useState(false);
   const [relatorioVisivel, setRelatorioVisivel] = useState(false);
+  const [salvandoDrive, setSalvandoDrive] = useState(false);
 
   const [info, setInfo] = useState<InfoEntidade | null>(null);
   const [tipo, setTipo] = useState<"escola" | "municipio">("escola");
@@ -131,6 +132,42 @@ export default function Home() {
     return null;
   }
 
+  function idAreaImpressao(): string | null {
+    if (modoAtual === "documento") return "docEditorPage";
+    if (modoAtual === "bahia") return "conteudoNotaBahia";
+    if (relatorioVisivel && info) return "conteudoNota";
+    return null;
+  }
+
+  async function salvarDrive() {
+    const elementoId = idAreaImpressao();
+    const nome = nomeArquivoImpressao();
+    if (!elementoId || !nome) {
+      popupAlerta("Nada para salvar", "Gere uma nota ou documento antes de salvar no Drive.", "warning");
+      return;
+    }
+
+    setSalvandoDrive(true);
+    try {
+      const { gerarPdfBase64, salvarNoDrive } = await import("@/lib/exportarPdf");
+      const pdfBase64 = await gerarPdfBase64(elementoId);
+      const url = await salvarNoDrive(nome, pdfBase64);
+      popupAlerta(
+        "Salvo no Drive",
+        `O PDF foi salvo na pasta do Drive.<br><br><a href="${url}" target="_blank" rel="noopener">Abrir arquivo no Drive</a>`,
+        "success"
+      );
+    } catch (err) {
+      popupAlerta(
+        "Erro ao salvar no Drive",
+        err instanceof Error ? err.message : String(err),
+        "error"
+      );
+    } finally {
+      setSalvandoDrive(false);
+    }
+  }
+
   function imprimir() {
     const nome = nomeArquivoImpressao();
     if (nome) {
@@ -186,6 +223,8 @@ export default function Home() {
         onCheckSaebRedeEstadualChange={setCheckSaebRedeEstadual}
         usuarioLogado={usuarioLogado}
         onImprimir={imprimir}
+        onSalvarDrive={salvarDrive}
+        salvandoDrive={salvandoDrive}
         onSair={sair}
       />
 
