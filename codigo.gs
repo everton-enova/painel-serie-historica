@@ -5,19 +5,7 @@
  *   Executar como: Eu (sua conta)
  *   Quem tem acesso: Qualquer pessoa
  * Copie a URL gerada e coloque em GOOGLE_APPS_SCRIPT_URL no .env.local
- *
- * IMPORTANTE — permissão do Drive:
- * Após colar este código, rode a função "autorizar" uma vez no editor
- * (selecione "autorizar" no menu de funções → Executar) e aceite o pedido
- * de permissão do Google Drive. Sem isso, o doPost falha com
- * "You do not have permission to call DriveApp...".
- * Depois: Implantar → Gerenciar implantações → editar → Nova versão.
  */
-
-// Opcional: cole aqui o ID da pasta do Drive onde os PDFs devem ser salvos
-// (o trecho após /folders/ na URL da pasta). Vazio = usa/cria a pasta abaixo.
-var PASTA_DRIVE_ID = '1B6iO-SUGhaVjIOnLjEz_3SXN1xmi8zCf';
-var NOME_PASTA_PADRAO = 'Painel Série Histórica - PDFs';
 
 function doGet(e) {
   try {
@@ -43,44 +31,6 @@ function doGet(e) {
   } catch (err) {
     return jsonResponse({ erro: err.message });
   }
-}
-
-function doPost(e) {
-  try {
-    var dados = JSON.parse(e.postData.contents);
-
-    if (dados.acao === 'salvarPdf') {
-      if (!dados.nome || !dados.pdfBase64) {
-        return jsonResponse({ erro: 'Informe nome e pdfBase64.' });
-      }
-      var bytes = Utilities.base64Decode(dados.pdfBase64);
-      // "/" no nome (ex.: NT-001_2026/CAV) atrapalha o download do arquivo
-      var nome = String(dados.nome).replace(/\//g, '-') + '.pdf';
-      var blob = Utilities.newBlob(bytes, 'application/pdf', nome);
-      var arquivo = obterPastaDestino().createFile(blob);
-      return jsonResponse({ url: arquivo.getUrl(), nome: nome });
-    }
-
-    return jsonResponse({ erro: 'Ação desconhecida: ' + dados.acao });
-  } catch (err) {
-    return jsonResponse({ erro: err.message });
-  }
-}
-
-/**
- * Rode esta função uma vez no editor para conceder a permissão do Drive.
- * Ela só localiza/cria a pasta de destino e registra o nome no log.
- */
-function autorizar() {
-  Logger.log('Conta que executa o script: ' + Session.getEffectiveUser().getEmail());
-  var pasta = obterPastaDestino();
-  Logger.log('Permissão OK. Pasta de destino: ' + pasta.getName());
-}
-
-function obterPastaDestino() {
-  if (PASTA_DRIVE_ID) return DriveApp.getFolderById(PASTA_DRIVE_ID);
-  var pastas = DriveApp.getFoldersByName(NOME_PASTA_PADRAO);
-  return pastas.hasNext() ? pastas.next() : DriveApp.createFolder(NOME_PASTA_PADRAO);
 }
 
 function jsonResponse(obj) {
