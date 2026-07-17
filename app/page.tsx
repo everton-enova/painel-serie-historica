@@ -10,7 +10,7 @@ import BahiaArea from "@/components/BahiaArea";
 import { useSession } from "@/hooks/useSession";
 import { popupAlerta } from "@/lib/popup";
 import { correspondeRede } from "@/lib/normalize";
-import { formatarDataAtual } from "@/lib/formatters";
+import { formatarDataAtual, nomeArquivoNota } from "@/lib/formatters";
 import type { BlocoSabe, BlocoSaeb, InfoEntidade, RespostaBusca } from "@/lib/types";
 
 export type Modo = "escola" | "municipio" | "documento" | "bahia";
@@ -116,6 +116,19 @@ export default function Home() {
     }
   }
 
+  function imprimir() {
+    if (modoAtual !== "documento" && relatorioVisivel && info) {
+      const tituloOriginal = document.title;
+      document.title = nomeArquivoNota(numNota, info.nome);
+      const restaurar = () => {
+        document.title = tituloOriginal;
+        window.removeEventListener("afterprint", restaurar);
+      };
+      window.addEventListener("afterprint", restaurar);
+    }
+    window.print();
+  }
+
   if (verificando) {
     return null;
   }
@@ -156,7 +169,7 @@ export default function Home() {
         checkSaebRedeEstadual={checkSaebRedeEstadual}
         onCheckSaebRedeEstadualChange={setCheckSaebRedeEstadual}
         usuarioLogado={usuarioLogado}
-        onImprimir={() => window.print()}
+        onImprimir={imprimir}
         onSair={sair}
       />
 
