@@ -116,10 +116,26 @@ export default function Home() {
     }
   }
 
+  function nomeArquivoImpressao(): string | null {
+    if (modoAtual === "documento") {
+      const assunto = document.getElementById("docTituloEditavel")?.textContent ?? "";
+      return nomeArquivoNota(numDoc, assunto);
+    }
+    if (modoAtual === "bahia") {
+      const assunto = document.getElementById("bahiaTituloNota")?.textContent ?? "";
+      return nomeArquivoNota(numNota, assunto);
+    }
+    if (relatorioVisivel && info) {
+      return nomeArquivoNota(numNota, info.nome);
+    }
+    return null;
+  }
+
   function imprimir() {
-    if (modoAtual !== "documento" && relatorioVisivel && info) {
+    const nome = nomeArquivoImpressao();
+    if (nome) {
       const tituloOriginal = document.title;
-      document.title = nomeArquivoNota(numNota, info.nome);
+      document.title = nome;
       const restaurar = () => {
         document.title = tituloOriginal;
         window.removeEventListener("afterprint", restaurar);

@@ -518,7 +518,7 @@ export default function BahiaArea() {
         <header className="header-modern">
           <LogoUpload />
           <div className="header-info">
-            <h1 className="header-title">BAHIA – SÉRIE HISTÓRICA</h1>
+            <h1 className="header-title" id="bahiaTituloNota">BAHIA – SÉRIE HISTÓRICA</h1>
             <div className="header-meta">
               <div><strong>SETOR:</strong> SGINF/DIE/COORDENAÇÃO DE AVALIAÇÃO</div>
               <div><strong>DATA:</strong> {formatarDataAtual()}</div>

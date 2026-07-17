@@ -14,7 +14,7 @@ export function nomeArquivoNota(numNota: string, assunto: string): string {
   const num = numNota.trim();
   const numero = /^\d+$/.test(num) ? num.padStart(3, "0") : num || "___";
   const titulo = assunto.trim() || "Sem assunto";
-  return `NT-${numero}_${ANO_NOTA}/CAV - "${titulo}"`;
+  return `NT-${numero}_${ANO_NOTA}/CAV - ${titulo}`;
 }
 
 export function formatar(v: unknown, d = 2): string {
