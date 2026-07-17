@@ -16,7 +16,7 @@
 
 // Opcional: cole aqui o ID da pasta do Drive onde os PDFs devem ser salvos
 // (o trecho após /folders/ na URL da pasta). Vazio = usa/cria a pasta abaixo.
-var PASTA_DRIVE_ID = '';
+var PASTA_DRIVE_ID = '1B6iO-SUGhaVjIOnLjEz_3SXN1xmi8zCf';
 var NOME_PASTA_PADRAO = 'Painel Série Histórica - PDFs';
 
 function doGet(e) {
@@ -72,6 +72,7 @@ function doPost(e) {
  * Ela só localiza/cria a pasta de destino e registra o nome no log.
  */
 function autorizar() {
+  Logger.log('Conta que executa o script: ' + Session.getEffectiveUser().getEmail());
   var pasta = obterPastaDestino();
   Logger.log('Permissão OK. Pasta de destino: ' + pasta.getName());
 }
