@@ -5,6 +5,13 @@
  *   Executar como: Eu (sua conta)
  *   Quem tem acesso: Qualquer pessoa
  * Copie a URL gerada e coloque em GOOGLE_APPS_SCRIPT_URL no .env.local
+ *
+ * IMPORTANTE — permissão do Drive:
+ * Após colar este código, rode a função "autorizar" uma vez no editor
+ * (selecione "autorizar" no menu de funções → Executar) e aceite o pedido
+ * de permissão do Google Drive. Sem isso, o doPost falha com
+ * "You do not have permission to call DriveApp...".
+ * Depois: Implantar → Gerenciar implantações → editar → Nova versão.
  */
 
 // Opcional: cole aqui o ID da pasta do Drive onde os PDFs devem ser salvos
@@ -58,6 +65,15 @@ function doPost(e) {
   } catch (err) {
     return jsonResponse({ erro: err.message });
   }
+}
+
+/**
+ * Rode esta função uma vez no editor para conceder a permissão do Drive.
+ * Ela só localiza/cria a pasta de destino e registra o nome no log.
+ */
+function autorizar() {
+  var pasta = obterPastaDestino();
+  Logger.log('Permissão OK. Pasta de destino: ' + pasta.getName());
 }
 
 function obterPastaDestino() {
