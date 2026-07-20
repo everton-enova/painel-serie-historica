@@ -23,6 +23,14 @@ export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
       import("jspdf"),
     ]);
 
+    // Blocos que não podem ser cortados entre páginas (mesma regra do CSS de
+    // impressão): medidos no DOM real antes da captura. Os elementos que o
+    // CSS_MODO_IMPRESSAO esconde são absolutos ou externos, não mudam o layout.
+    const baseRect = el.getBoundingClientRect();
+    const blocosDom = el.querySelectorAll(
+      "table, .no-break, .bahia-chart-inline, .header-modern, .school-card, .analysis-box"
+    );
+
     const canvas = await html2canvas(el, {
       scale: 2,
       useCORS: true,
@@ -34,6 +42,17 @@ export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
       },
     });
 
+    const fator = canvas.width / baseRect.width;
+    const blocos: Array<{ top: number; bottom: number }> = [];
+    blocosDom.forEach((b) => {
+      const r = b.getBoundingClientRect();
+      if (r.height <= 0) return;
+      blocos.push({
+        top: (r.top - baseRect.top) * fator,
+        bottom: (r.bottom - baseRect.top) * fator,
+      });
+    });
+
     const pdf = new jsPDF({ unit: "mm", format: "a4" });
     const margem = 10;
     const larguraUtil = pdf.internal.pageSize.getWidth() - margem * 2;
@@ -41,8 +60,24 @@ export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
     const pxPorMm = canvas.width / larguraUtil;
     const alturaPaginaPx = Math.floor(alturaUtil * pxPorMm);
 
-    for (let y = 0, pagina = 0; y < canvas.height; y += alturaPaginaPx, pagina++) {
-      const alturaFatia = Math.min(alturaPaginaPx, canvas.height - y);
+    for (let y = 0, pagina = 0; y < canvas.height - 1; pagina++) {
+      let corte = Math.min(y + alturaPaginaPx, canvas.height);
+      if (corte < canvas.height) {
+        // Recua o corte para a borda superior de qualquer bloco que ele
+        // atravessaria — desde que isso não encolha a página demais (blocos
+        // maiores que uma página são cortados mesmo).
+        const minimo = y + alturaPaginaPx * 0.25;
+        for (let mudou = true, guarda = 0; mudou && guarda < 20; guarda++) {
+          mudou = false;
+          for (const b of blocos) {
+            if (b.top < corte && corte < b.bottom && b.top - 4 > minimo) {
+              corte = Math.floor(b.top - 4);
+              mudou = true;
+            }
+          }
+        }
+      }
+      const alturaFatia = corte - y;
       const fatia = document.createElement("canvas");
       fatia.width = canvas.width;
       fatia.height = alturaFatia;
@@ -61,6 +96,7 @@ export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
         larguraUtil,
         alturaFatia / pxPorMm
       );
+      y = corte;
     }
 
     return pdf.output("datauristring").split(",")[1] ?? null;
