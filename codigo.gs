@@ -473,25 +473,24 @@ function listarRegionais() {
 }
 
 // ══════════════════ NOTAS SALVAS (Drive + aba índice) ══════════════════
-// Estrutura no Drive do proprietário do script:
-//   Painel Série Histórica — Notas/
-//     ├── Recentes (HTML)/   ← fonte da verdade, reeditável no painel
-//     └── Notas (PDF)/       ← cópia em PDF para download/arquivamento
+// As notas são gravadas em pastas fixas do Drive do proprietário:
+//   PASTA_PDF_ID  → notas finais em PDF (download/arquivamento)
+//   PASTA_HTML_ID → HTML temporário dos "recentes", reeditável no painel
 // A aba "Notas Salvas" da planilha é o índice que alimenta a tela Recentes.
 
-var PASTA_RAIZ_NOTAS = 'Painel Série Histórica — Notas';
-var SUBPASTA_HTML = 'Recentes (HTML)';
-var SUBPASTA_PDF = 'Notas (PDF)';
+var PASTA_PDF_ID = '1GOsFZZhfBvKwIsTTXcTFuNr6ZkqL83zn';
+var PASTA_HTML_ID = '1E7vAjG2J_SFJ4VgKZVc_PgnK3-tp1N5W';
 var ABA_NOTAS_SALVAS = 'Notas Salvas';
 
-function _obterPasta(pai, nome) {
-  var it = pai.getFoldersByName(nome);
-  return it.hasNext() ? it.next() : pai.createFolder(nome);
-}
-
 function _pastasNotas() {
-  var raiz = _obterPasta(DriveApp.getRootFolder(), PASTA_RAIZ_NOTAS);
-  return { html: _obterPasta(raiz, SUBPASTA_HTML), pdf: _obterPasta(raiz, SUBPASTA_PDF) };
+  try {
+    return {
+      html: DriveApp.getFolderById(PASTA_HTML_ID),
+      pdf: DriveApp.getFolderById(PASTA_PDF_ID)
+    };
+  } catch (e) {
+    throw new Error('Pasta do Drive não encontrada ou sem acesso. Confira PASTA_PDF_ID / PASTA_HTML_ID no Código.gs e se a implantação roda na conta do proprietário das pastas. (' + e.message + ')');
+  }
 }
 
 function _abaNotas() {
