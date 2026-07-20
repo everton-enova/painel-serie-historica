@@ -233,7 +233,7 @@ export default function Home() {
       if (el) {
         payload = {
           id: notaAbertaId,
-          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA} — Resultado do ${rotuloAvaliacoes(
+          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA}/CAV — Resultado do ${rotuloAvaliacoes(
             !!document.getElementById("secaoBahiaSabe"),
             !!document.getElementById("secaoBahiaSaeb")
           )} - BAHIA`,
@@ -249,7 +249,7 @@ export default function Home() {
       if (el) {
         payload = {
           id: notaAbertaId,
-          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA} — Resultado do ${rotuloAvaliacoes(checkSabe, checkSaeb)} - ${info.nome}`,
+          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA}/CAV — Resultado do ${rotuloAvaliacoes(checkSabe, checkSaeb)} - ${info.nome}`,
           tipo: modoAtual,
           numero: num,
           entidade: String(info.nome),
