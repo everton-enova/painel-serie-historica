@@ -666,12 +666,22 @@ function salvarNota(payload) {
   var docHtml = _docCompletoNota(titulo, payload.html);
   var blobHtml = Utilities.newBlob(docHtml, 'text/html', nomeBase + '.html');
 
+  // PDF: preferir o gerado no navegador (fiel à tela); sem ele, converter o HTML.
   var blobPdf = null, avisoPdf = '';
-  try {
-    blobPdf = blobHtml.getAs('application/pdf');
-    blobPdf.setName(nomeBase + '.pdf');
-  } catch (e) {
-    avisoPdf = 'HTML salvo, mas a conversão para PDF falhou: ' + e.message;
+  if (payload.pdfBase64) {
+    try {
+      blobPdf = Utilities.newBlob(Utilities.base64Decode(payload.pdfBase64), 'application/pdf', nomeBase + '.pdf');
+    } catch (ePdf) {
+      blobPdf = null;
+    }
+  }
+  if (!blobPdf) {
+    try {
+      blobPdf = blobHtml.getAs('application/pdf');
+      blobPdf.setName(nomeBase + '.pdf');
+    } catch (e) {
+      avisoPdf = 'HTML salvo, mas a conversão para PDF falhou: ' + e.message;
+    }
   }
 
   var agora = _agora();

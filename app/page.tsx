@@ -188,7 +188,9 @@ export default function Home() {
       entidade: string;
       autor: string;
       html: string;
+      pdfBase64?: string;
     } | null = null;
+    let elNota: HTMLElement | null = null;
 
     const num = numNota.trim();
 
@@ -204,6 +206,7 @@ export default function Home() {
           autor: usuarioLogado || "",
           html: el.innerHTML,
         };
+        elNota = el;
       }
     } else if (modoAtual === "documento") {
       const el = document.getElementById("docEditorPage");
@@ -218,6 +221,7 @@ export default function Home() {
           autor: usuarioLogado || "",
           html: el.innerHTML,
         };
+        elNota = el;
       }
     } else if (modoAtual === "bahia") {
       const el = document.getElementById("conteudoNotaBahia");
@@ -231,6 +235,7 @@ export default function Home() {
           autor: usuarioLogado || "",
           html: el.innerHTML,
         };
+        elNota = el;
       }
     } else if (relatorioVisivel && info) {
       const el = document.getElementById("conteudoNota");
@@ -244,6 +249,7 @@ export default function Home() {
           autor: usuarioLogado || "",
           html: el.innerHTML,
         };
+        elNota = el;
       }
     }
 
@@ -258,6 +264,11 @@ export default function Home() {
 
     setSalvando(true);
     try {
+      if (elNota) {
+        const { gerarPdfBase64 } = await import("@/lib/pdfNota");
+        const pdf = await gerarPdfBase64(elNota);
+        if (pdf) payload.pdfBase64 = pdf;
+      }
       const res = await fetch("/api/notas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
