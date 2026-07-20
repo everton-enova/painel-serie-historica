@@ -46,6 +46,7 @@ function doGet(e) {
         case 'abrir': return jsonResponse(abrirNota(p.id));
         case 'sabeEstado': return jsonResponse(sabeEstadoFlat());
         case 'diagnostico': return jsonResponse(diagnosticoDrive());
+        case 'diagnosticoEscrita': return jsonResponse(diagnosticoEscritaDrive());
         default: return jsonResponse({ erro: 'Função desconhecida: ' + fn });
       }
     }
@@ -541,6 +542,33 @@ var ABA_NOTAS_SALVAS = 'Notas Salvas';
 function autorizarDrive() {
   var pastas = _pastasNotas();
   Logger.log('Acesso OK — HTML: "' + pastas.html.getName() + '" | PDF: "' + pastas.pdf.getName() + '"');
+}
+
+// Diagnóstico de escrita via URL: /exec?fn=diagnosticoEscrita
+// Cria e apaga um arquivo de teste em cada pasta para validar a permissão.
+function diagnosticoEscritaDrive() {
+  var out = { escritaHtml: '', escritaPdf: '' };
+  var pastas;
+  try {
+    pastas = _pastasNotas();
+  } catch (e0) {
+    return { erro: e0.message };
+  }
+  try {
+    var f1 = pastas.html.createFile(Utilities.newBlob('teste', 'text/plain', '_teste_permissao.txt'));
+    f1.setTrashed(true);
+    out.escritaHtml = 'OK';
+  } catch (e1) {
+    out.escritaHtml = 'FALHOU: ' + e1.message;
+  }
+  try {
+    var f2 = pastas.pdf.createFile(Utilities.newBlob('teste', 'text/plain', '_teste_permissao.txt'));
+    f2.setTrashed(true);
+    out.escritaPdf = 'OK';
+  } catch (e2) {
+    out.escritaPdf = 'FALHOU: ' + e2.message;
+  }
+  return out;
 }
 
 // Diagnóstico via URL: /exec?fn=diagnostico
