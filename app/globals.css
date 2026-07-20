@@ -1387,7 +1387,8 @@ a {
   }
   .action-group {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* Salvar | PDF/Imprimir | Sair */
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
     width: 100%;
     margin-top: 5px;

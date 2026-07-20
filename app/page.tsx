@@ -197,9 +197,10 @@ export default function Home() {
   }
 
   // Salva o HTML da nota no Drive (aba Recentes) sem interromper o fluxo:
-  // chamado automaticamente ao clicar em PDF/Imprimir. Sem nada para salvar,
-  // não faz nada; só exibe popup em caso de erro.
-  async function salvarNota() {
+  // chamado pelo botão Salvar e também antes do PDF/Imprimir. Sem nada para
+  // salvar, não faz nada; só exibe popup em caso de erro. Devolve o que
+  // aconteceu, para o botão Salvar dar o retorno visual ao usuário.
+  async function salvarNota(): Promise<"salvo" | "vazio" | "erro"> {
     // Nota aberta só para leitura (outra pessoa está editando): não sobrescreve.
     if (somenteLeitura) {
       popupAlerta(
@@ -208,7 +209,7 @@ export default function Home() {
           "Ela está aberta apenas para leitura e não será salva nos Recentes.",
         "warning"
       );
-      return;
+      return "erro";
     }
 
     let payload: {
@@ -281,7 +282,7 @@ export default function Home() {
       }
     }
 
-    if (!payload) return;
+    if (!payload) return "vazio";
 
     setSalvando(true);
     try {
@@ -293,17 +294,40 @@ export default function Home() {
       const dados: RespostaSalvar = await res.json();
       if (dados.bloqueada) {
         popupAlerta("Nota em edição", dados.erro || "Outra pessoa está editando esta nota.", "warning");
-        return;
+        return "erro";
       }
       if (dados.erro || !dados.sucesso) {
         popupAlerta("Erro ao salvar nos Recentes", dados.erro || "Falha desconhecida.", "error");
-        return;
+        return "erro";
       }
       setNotaAbertaId(dados.id || null);
+      return "salvo";
     } catch (err) {
       popupAlerta("Erro ao salvar nos Recentes", err instanceof Error ? err.message : String(err), "error");
+      return "erro";
     } finally {
       setSalvando(false);
+    }
+  }
+
+  // Botão 💾 SALVAR: grava a nota nos Recentes e confirma, sem imprimir —
+  // permite parar aqui e retomar a edição depois pela aba Recentes.
+  async function salvarManual() {
+    const r = await salvarNota();
+    if (r === "vazio") {
+      popupAlerta(
+        "Nada para salvar",
+        "Gere uma nota (busque uma escola/município/regional, ou use Bahia/Documento) antes de salvar.",
+        "info"
+      );
+      return;
+    }
+    if (r === "salvo") {
+      popupAlerta(
+        "Nota salva",
+        "A nota foi gravada nos <b>Recentes</b>. Você pode fechar e continuar a edição depois pela aba 🕘 Recentes.",
+        "success"
+      );
     }
   }
 
@@ -393,6 +417,7 @@ export default function Home() {
         onCheckSaebRedeEstadualChange={setCheckSaebRedeEstadual}
         usuarioLogado={usuarioLogado}
         salvando={salvando}
+        onSalvar={salvarManual}
         onImprimir={imprimir}
         onSair={sair}
       />

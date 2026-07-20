@@ -35,6 +35,7 @@ interface TopBarProps {
   onCheckSaebRedeEstadualChange: (v: boolean) => void;
   usuarioLogado: string;
   salvando: boolean;
+  onSalvar: () => void;
   onImprimir: () => void;
   onSair: () => void;
 }
@@ -70,6 +71,7 @@ export default function TopBar({
   onCheckSaebRedeEstadualChange,
   usuarioLogado,
   salvando,
+  onSalvar,
   onImprimir,
   onSair,
 }: TopBarProps) {
@@ -303,8 +305,16 @@ export default function TopBar({
         <span className="small text-muted me-2" style={{ whiteSpace: "nowrap" }}>
           Logado: <b id="userDisplay">{usuarioLogado}</b>
         </span>
+        <button
+          className="btn btn-primary btn-sm fw-bold"
+          onClick={onSalvar}
+          disabled={salvando}
+          title="Grava a nota nos Recentes para continuar editando depois"
+        >
+          {salvando ? "Salvando..." : "💾 SALVAR"}
+        </button>
         <button className="btn btn-success btn-sm fw-bold" onClick={onImprimir} disabled={salvando}>
-          {salvando ? "Salvando..." : "🖨️ PDF / IMPRIMIR"}
+          🖨️ PDF / IMPRIMIR
         </button>
         <button className="btn btn-outline-danger btn-sm" onClick={onSair}>
           Sair
