@@ -574,7 +574,7 @@ function diagnosticoEscritaDrive() {
 // Diagnóstico via URL: /exec?fn=diagnostico
 // Mostra em qual conta o Web App executa e se o Drive está acessível.
 function diagnosticoDrive() {
-  var out = { versao: 'v11', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
+  var out = { versao: 'v11.2', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
   try {
     out.executaComo = Session.getEffectiveUser().getEmail() || '(vazio)';
   } catch (e0) {
@@ -613,7 +613,17 @@ function _abaNotas() {
 }
 
 function _agora() {
-  return Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'America/Bahia', 'dd/MM/yyyy HH:mm');
+  // Fuso fixo: não depende do fuso do projeto Apps Script nem da planilha.
+  return Utilities.formatDate(new Date(), 'America/Bahia', 'dd/MM/yyyy HH:mm');
+}
+
+// A planilha converte "dd/MM/yyyy HH:mm" em Date; ao ler de volta, normaliza
+// para o texto pt-BR no fuso da Bahia (legado). Valores já em texto passam direto.
+function _fmtData(v) {
+  if (v && typeof v.getTime === 'function') {
+    return Utilities.formatDate(v, 'America/Bahia', 'dd/MM/yyyy HH:mm');
+  }
+  return String(v || '');
 }
 
 // Documento HTML completo salvo no Drive. O conteúdo original fica entre os
@@ -674,7 +684,7 @@ function salvarNota(payload) {
   if (linha >= 0) {
     // Sobrescreve: atualiza o HTML no lugar; PDF antigo (de versões anteriores) é descartado
     id = String(dados[linha][0]);
-    criadoEm = dados[linha][6];
+    criadoEm = _fmtData(dados[linha][6]);
     try {
       htmlFile = DriveApp.getFileById(String(dados[linha][8]));
       htmlFile.setContent(docHtml);
@@ -685,13 +695,15 @@ function salvarNota(payload) {
     if (dados[linha][9]) {
       try { DriveApp.getFileById(String(dados[linha][9])).setTrashed(true); } catch (e3) {}
     }
+    // Apóstrofo inicial força a planilha a guardar a data como texto (sem
+    // reinterpretar no fuso dela) — ao ler de volta, o apóstrofo não aparece.
     sh.getRange(linha + 1, 1, 1, 10).setValues([[id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
-      payload.autor || '-', criadoEm, agora, htmlFile.getId(), '']]);
+      payload.autor || '-', "'" + criadoEm, "'" + agora, htmlFile.getId(), '']]);
   } else {
     id = Utilities.getUuid();
     htmlFile = pastas.html.createFile(blobHtml);
     sh.appendRow([id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
-      payload.autor || '-', agora, agora, htmlFile.getId(), '']);
+      payload.autor || '-', "'" + agora, "'" + agora, htmlFile.getId(), '']);
   }
 
   return {
@@ -716,8 +728,8 @@ function listarNotasSalvas() {
       entidade: String(r[3]),
       numero: String(r[4]),
       autor: String(r[5]),
-      criadoEm: String(r[6]),
-      atualizadoEm: String(r[7]),
+      criadoEm: _fmtData(r[6]),
+      atualizadoEm: _fmtData(r[7]),
       urlHtml: _linkDrive(String(r[8] || '')),
       urlPdf: _linkDrive(String(r[9] || ''))
     });
