@@ -45,10 +45,38 @@ export interface InfoEntidade {
 
 export interface RespostaRelatorio {
   sucesso: true;
-  tipo: "escola" | "municipio";
+  tipo: "escola" | "municipio" | "regional";
   info: InfoEntidade;
   historico: BlocoSabe[];
   saeb: Omit<BlocoSaeb, "raw">[];
+}
+
+export interface RegionalOpcao {
+  num: number;
+  nome: string;
+}
+
+export interface NotaSalvaMeta {
+  id: string;
+  titulo: string;
+  tipo: string;
+  entidade: string;
+  numero: string;
+  autor: string;
+  criadoEm: string;
+  atualizadoEm: string;
+  urlHtml: string;
+  urlPdf: string;
+}
+
+export interface NotaAberta {
+  sucesso: true;
+  id: string;
+  titulo: string;
+  tipo: string;
+  entidade: string;
+  numero: string;
+  html: string;
 }
 
 export interface RespostaErro {

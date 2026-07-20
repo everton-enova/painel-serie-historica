@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getMultipleSheetValues } from "@/lib/sheets";
+import { chamarScript } from "@/lib/scriptApi";
 
 function n(val: unknown): number | null {
   if (val === null || val === undefined || val === "") return null;
@@ -11,28 +12,27 @@ const ANOS_SAEB = [2019, 2021, 2023, 2025];
 // Offsets within each year block (base col = 3): IR, MAT, LP, MP, IDEB
 const SAEB_KEYS = ["ir", "mat", "lp", "mp", "ideb"] as const;
 
+interface LinhaSabeEstado {
+  edicao: string;
+  estado: string;
+  rede: string;
+  etapa: string;
+  disciplina: string;
+  previstos: number | null;
+  avaliados: number | null;
+  participacao: number | null;
+  proficiencia: number | null;
+  padraoDesempenho: string;
+}
+
 export async function GET() {
   try {
-    const sheets = await getMultipleSheetValues(["SABE_BAHIA", "Saeb_BAHIA"]);
-
-    // ── SABE ────────────────────────────────────────────────────────────
-    // Cols: EDICAO(0) ESTADO(1) REDE(2) ETAPA(3) DISCIPLINA(4)
-    //       PREVISTOS(5) AVALIADOS(6) PARTICIPACAO(7) PROFICIENCIA(8) PADRAO(9)
-    const sabeRows = sheets["SABE_BAHIA"] ?? [];
-    const sabe = sabeRows.slice(1)
-      .map((row) => ({
-        edicao: String(row[0] ?? "").trim(),
-        estado: String(row[1] ?? "").trim(),
-        rede: String(row[2] ?? "").trim(),
-        etapa: String(row[3] ?? "").trim(),
-        disciplina: String(row[4] ?? "").trim(),
-        previstos: n(row[5]),
-        avaliados: n(row[6]),
-        participacao: n(row[7]),
-        proficiencia: n(row[8]),
-        padraoDesempenho: String(row[9] ?? "").trim(),
-      }))
-      .filter((r) => r.edicao && r.etapa && r.rede && r.disciplina);
+    // SABE estadual agora vem das linhas TIPO=ESTADO da aba "SABE 19 a 25"
+    // (a aba SABE_BAHIA foi excluída na reestruturação da planilha).
+    const [sabe, sheets] = await Promise.all([
+      chamarScript<LinhaSabeEstado[]>("sabeEstado"),
+      getMultipleSheetValues(["Saeb_BAHIA"]),
+    ]);
 
     // ── SAEB ────────────────────────────────────────────────────────────
     // Cols: ETAPA(0) TIPO(1) REDE(2)

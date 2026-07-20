@@ -6,7 +6,7 @@ import LogoUpload from "./LogoUpload";
 
 interface RelatorioAreaProps {
   info: InfoEntidade;
-  tipo: "escola" | "municipio";
+  tipo: "escola" | "municipio" | "regional";
   numNota: string;
   usuarioLogado: string;
   dadosSabe: BlocoSabe[];
@@ -55,12 +55,12 @@ export default function RelatorioArea({
           <div className="school-details">
             <div>
               <span className="school-label" id="labelCodigo">
-                {tipo === "escola" ? "INEP:" : "CÓD. MUNICÍPIO:"}
+                {tipo === "escola" ? "INEP:" : tipo === "regional" ? "REGIONAL:" : "CÓD. MUNICÍPIO:"}
               </span>{" "}
               <span id="codigoEntidade">{info.codigo}</span>
             </div>
             <div>
-              <span className="school-label">REGIONAL:</span>{" "}
+              <span className="school-label">{tipo === "regional" ? "ABRANGÊNCIA:" : "REGIONAL:"}</span>{" "}
               <span id="regionalEntidade">
                 {tipo === "escola" ? `${info.regional} – ${info.municipio}` : info.regional}
               </span>

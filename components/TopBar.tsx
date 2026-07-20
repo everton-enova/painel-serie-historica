@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { Modo } from "@/app/page";
+import type { RegionalOpcao } from "@/lib/types";
 
 interface TopBarProps {
   modoAtual: Modo;
@@ -9,6 +10,9 @@ interface TopBarProps {
   searchInput: string;
   onSearchInputChange: (v: string) => void;
   onBuscar: () => void;
+  regionais: RegionalOpcao[];
+  regionalSelecionada: string;
+  onRegionalChange: (v: string) => void;
   numNota: string;
   onNumNotaChange: (v: string) => void;
   numDoc: string;
@@ -21,6 +25,8 @@ interface TopBarProps {
   onCheckSabeRedeMunicipalChange: (v: boolean) => void;
   checkSabeRedeEstadual: boolean;
   onCheckSabeRedeEstadualChange: (v: boolean) => void;
+  checkSabeRedePublica: boolean;
+  onCheckSabeRedePublicaChange: (v: boolean) => void;
   checkSaebRedePublica: boolean;
   onCheckSaebRedePublicaChange: (v: boolean) => void;
   checkSaebRedeMunicipal: boolean;
@@ -28,6 +34,8 @@ interface TopBarProps {
   checkSaebRedeEstadual: boolean;
   onCheckSaebRedeEstadualChange: (v: boolean) => void;
   usuarioLogado: string;
+  onSalvar: () => void;
+  salvando: boolean;
   onImprimir: () => void;
   onSair: () => void;
 }
@@ -38,6 +46,9 @@ export default function TopBar({
   searchInput,
   onSearchInputChange,
   onBuscar,
+  regionais,
+  regionalSelecionada,
+  onRegionalChange,
   numNota,
   onNumNotaChange,
   numDoc,
@@ -50,6 +61,8 @@ export default function TopBar({
   onCheckSabeRedeMunicipalChange,
   checkSabeRedeEstadual,
   onCheckSabeRedeEstadualChange,
+  checkSabeRedePublica,
+  onCheckSabeRedePublicaChange,
   checkSaebRedePublica,
   onCheckSaebRedePublicaChange,
   checkSaebRedeMunicipal,
@@ -57,11 +70,13 @@ export default function TopBar({
   checkSaebRedeEstadual,
   onCheckSaebRedeEstadualChange,
   usuarioLogado,
+  onSalvar,
+  salvando,
   onImprimir,
   onSair,
 }: TopBarProps) {
-  const isMunicipio = modoAtual === "municipio";
-  const mostraFiltrosDados = modoAtual !== "documento" && modoAtual !== "bahia";
+  const comFiltroRede = modoAtual === "municipio" || modoAtual === "regional";
+  const mostraFiltrosDados = modoAtual === "escola" || modoAtual === "municipio" || modoAtual === "regional";
   const docNumRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -84,6 +99,12 @@ export default function TopBar({
             📊 Bahia
           </button>
           <button
+            className={`mode-tab ${modoAtual === "regional" ? "active" : ""}`}
+            onClick={() => onTrocarModo("regional")}
+          >
+            📍 Regional
+          </button>
+          <button
             className={`mode-tab ${modoAtual === "municipio" ? "active" : ""}`}
             onClick={() => onTrocarModo("municipio")}
           >
@@ -100,6 +121,12 @@ export default function TopBar({
             onClick={() => onTrocarModo("documento")}
           >
             📝 Documento
+          </button>
+          <button
+            className={`mode-tab ${modoAtual === "recentes" ? "active" : ""}`}
+            onClick={() => onTrocarModo("recentes")}
+          >
+            🕘 Recentes
           </button>
         </div>
 
@@ -120,18 +147,37 @@ export default function TopBar({
         {mostraFiltrosDados && (
           <div className="filtros-dados" id="filtrosDados">
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <input
-                type="text"
-                id="searchInput"
-                className="form-control form-control-sm"
-                style={{ width: 180 }}
-                placeholder={modoAtual === "escola" ? "Código INEP" : "Código do Município"}
-                value={searchInput}
-                onChange={(e) => onSearchInputChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") onBuscar();
-                }}
-              />
+              {modoAtual === "regional" ? (
+                <select
+                  id="regionalSelect"
+                  className="form-select form-select-sm"
+                  style={{ width: 300 }}
+                  value={regionalSelecionada}
+                  onChange={(e) => onRegionalChange(e.target.value)}
+                >
+                  <option value="">
+                    {regionais.length ? "Selecione a Regional (NTE)..." : "Carregando NTEs..."}
+                  </option>
+                  {regionais.map((r) => (
+                    <option key={r.num} value={String(r.num)}>
+                      {r.nome}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  id="searchInput"
+                  className="form-control form-control-sm"
+                  style={{ width: 180 }}
+                  placeholder={modoAtual === "escola" ? "Código INEP" : "Código do Município"}
+                  value={searchInput}
+                  onChange={(e) => onSearchInputChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") onBuscar();
+                  }}
+                />
+              )}
               <button className="btn btn-primary btn-sm btn-buscar" onClick={onBuscar}>
                 Buscar
               </button>
@@ -159,7 +205,7 @@ export default function TopBar({
                     />
                     <label htmlFor="checkSabe">SABE</label>
                   </div>
-                  {isMunicipio && checkSabe && (
+                  {comFiltroRede && checkSabe && (
                     <div className="sub-checkbox-group" id="filtroRedeSabe">
                       <div className="sub-checkbox-item">
                         <input
@@ -179,6 +225,15 @@ export default function TopBar({
                         />
                         <label htmlFor="checkSabeRedeEstadual">Estadual</label>
                       </div>
+                      <div className="sub-checkbox-item">
+                        <input
+                          type="checkbox"
+                          id="checkSabeRedePublica"
+                          checked={checkSabeRedePublica}
+                          onChange={(e) => onCheckSabeRedePublicaChange(e.target.checked)}
+                        />
+                        <label htmlFor="checkSabeRedePublica">Pública</label>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -195,7 +250,7 @@ export default function TopBar({
                     />
                     <label htmlFor="checkSaeb">Saeb</label>
                   </div>
-                  {isMunicipio && checkSaeb && (
+                  {comFiltroRede && checkSaeb && (
                     <div className="sub-checkbox-group" id="filtroRedeSaeb">
                       <div className="sub-checkbox-item">
                         <input
@@ -237,6 +292,9 @@ export default function TopBar({
         <span className="small text-muted me-2" style={{ whiteSpace: "nowrap" }}>
           Logado: <b id="userDisplay">{usuarioLogado}</b>
         </span>
+        <button className="btn btn-primary btn-sm fw-bold" onClick={onSalvar} disabled={salvando}>
+          {salvando ? "Salvando..." : "💾 Salvar"}
+        </button>
         <button className="btn btn-success btn-sm fw-bold" onClick={onImprimir}>
           🖨️ PDF / IMPRIMIR
         </button>

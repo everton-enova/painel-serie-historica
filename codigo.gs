@@ -25,12 +25,31 @@ var EDICOES_PRELIMINARES = [2025];
 
 // ══════════════════ WEB APP + API JSON ══════════════════
 // Sem parâmetros: serve o Painel (Painel.html).
-// Com ?sheets=Aba1,Aba2: API JSON usada pelo Next.js na Vercel
-// (GOOGLE_APPS_SCRIPT_URL no .env.local).
+// Com ?fn=...: API por função usada pelo app Next.js na Vercel
+//   (login, escola, municipio, regional, bahia, regionais, recentes,
+//    abrir, sabeEstado). Escritas (salvar/excluir) via doPost.
+// Com ?sheets=Aba1,Aba2: API JSON bruta (compatibilidade).
 
 function doGet(e) {
   try {
-    var sheetNames = String(e && e.parameter && e.parameter.sheets || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    var p = (e && e.parameter) || {};
+    var fn = String(p.fn || '').trim();
+    if (fn) {
+      switch (fn) {
+        case 'login': return jsonResponse(verificarLogin(p.cpf));
+        case 'escola': return jsonResponse(buscarDadosEscola(p.codigo));
+        case 'municipio': return jsonResponse(buscarDadosMunicipio(p.codigo));
+        case 'regional': return jsonResponse(buscarDadosRegional(p.nte));
+        case 'bahia': return jsonResponse(buscarDadosBahia());
+        case 'regionais': return jsonResponse(listarRegionais());
+        case 'recentes': return jsonResponse(listarNotasSalvas());
+        case 'abrir': return jsonResponse(abrirNota(p.id));
+        case 'sabeEstado': return jsonResponse(sabeEstadoFlat());
+        default: return jsonResponse({ erro: 'Função desconhecida: ' + fn });
+      }
+    }
+
+    var sheetNames = String(p.sheets || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
     if (sheetNames.length === 0) {
       return HtmlService.createHtmlOutputFromFile('Painel')
         .setTitle('Painel Série Histórica')
@@ -50,6 +69,39 @@ function doGet(e) {
   } catch (err) {
     return jsonResponse({ erro: err.message });
   }
+}
+
+// Escritas do app Vercel: body JSON { fn: 'salvar'|'excluir', ... }
+function doPost(e) {
+  try {
+    var body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    var fn = String(body.fn || '');
+    if (fn === 'salvar') return jsonResponse(salvarNota(body.payload || {}));
+    if (fn === 'excluir') return jsonResponse(excluirNota(body.id));
+    return jsonResponse({ erro: 'Função POST desconhecida: ' + fn });
+  } catch (err) {
+    return jsonResponse({ erro: err.message });
+  }
+}
+
+// Linhas SABE TIPO=ESTADO no formato plano consumido pela tela Bahia do
+// app Vercel (substitui a aba SABE_BAHIA, excluída na reestruturação).
+// Participação já normalizada em percentual (0–100).
+function sabeEstadoFlat() {
+  return _linhasSabe(function(o) { return o.tipo === 'ESTADO'; }).map(function(o) {
+    return {
+      edicao: String(o.edicao),
+      estado: 'BAHIA',
+      rede: _normRede(o.rede),
+      etapa: _normEtapa(o.etapa),
+      disciplina: String(o.disciplina == null ? '' : o.disciplina).trim(),
+      previstos: _num(o.previstos),
+      avaliados: _num(o.avaliados),
+      participacao: _participacao(o.previstos, o.avaliados, o.part),
+      proficiencia: _num(o.prof),
+      padraoDesempenho: _normPadrao(o.padrao)
+    };
+  });
 }
 
 function jsonResponse(obj) {

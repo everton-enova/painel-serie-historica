@@ -3,8 +3,8 @@ import { chamarScript, adaptarRespostaBusca, type GsRespostaBusca } from "@/lib/
 
 export async function GET(request: NextRequest) {
   try {
-    const cd = request.nextUrl.searchParams.get("cd") || "";
-    const gs = await chamarScript<GsRespostaBusca>("municipio", { codigo: cd });
+    const nte = request.nextUrl.searchParams.get("nte") || "";
+    const gs = await chamarScript<GsRespostaBusca>("regional", { nte });
     return NextResponse.json(adaptarRespostaBusca(gs));
   } catch (err) {
     return NextResponse.json(
