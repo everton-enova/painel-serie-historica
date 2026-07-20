@@ -285,7 +285,7 @@ export default function Home() {
         return;
       }
       setNotaAbertaId(dados.id || null);
-      let msg = `Nota salva no Drive (${dados.atualizadoEm || ""}).`;
+      let msg = `Nota salva no Drive (${dados.atualizadoEm || ""}). <small style="color:#999">painel v10.10</small>`;
       if (dados.urlPdf) msg += `<br><a href="${dados.urlPdf}" target="_blank">Abrir PDF</a>`;
       if (dados.aviso) msg += `<br><small style="color:#e65100">${dados.aviso}</small>`;
       if (!pdfEnviado) {

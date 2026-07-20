@@ -31,8 +31,12 @@ export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
       "table, .no-break, .bahia-chart-inline, .header-modern, .school-card, .analysis-box"
     );
 
+    // Resolução 2x, reduzida se a nota for longa demais para o limite de
+    // ~32k px de altura de canvas dos navegadores.
+    const escala = Math.min(2, 30000 / Math.max(el.scrollHeight, 1));
+
     const canvas = await html2canvas(el, {
-      scale: 2,
+      scale: escala,
       useCORS: true,
       backgroundColor: "#ffffff",
       onclone: (doc) => {
