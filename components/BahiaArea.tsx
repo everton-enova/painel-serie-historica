@@ -16,7 +16,7 @@ import ChartDataLabels from "chartjs-plugin-datalabels";
 import type { Context as DlContext } from "chartjs-plugin-datalabels";
 import { Line, Bar } from "react-chartjs-2";
 import LogoUpload from "./LogoUpload";
-import { formatarDataAtual } from "@/lib/formatters";
+import { formatarDataAtual, ANO_NOTA } from "@/lib/formatters";
 import { normalizarTexto } from "@/lib/normalize";
 
 ChartJS.register(
@@ -426,7 +426,7 @@ function BlocoSaebBahia({ etapa, tipo, rede, dados }: {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-export default function BahiaArea() {
+export default function BahiaArea({ numNota }: { numNota: string }) {
   const [sabe, setSabe] = useState<LinhaSabeBahia[]>([]);
   const [saeb, setSaeb] = useState<LinhaSaebBahia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -518,6 +518,9 @@ export default function BahiaArea() {
         <header className="header-modern">
           <LogoUpload />
           <div className="header-info">
+            <h1 className="header-title">
+              NOTA TÉCNICA <span id="numNotaBahiaDisplay">{numNota || "___"}</span>/{ANO_NOTA}
+            </h1>
             <h1 className="header-title" id="bahiaTituloNota">BAHIA – SÉRIE HISTÓRICA</h1>
             <div className="header-meta">
               <div><strong>SETOR:</strong> SGINF/DIE/COORDENAÇÃO DE AVALIAÇÃO</div>

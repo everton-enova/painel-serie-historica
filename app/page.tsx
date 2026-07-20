@@ -406,7 +406,7 @@ export default function Home() {
         <DocumentoArea usuarioLogado={usuarioLogado} dataFormatada={formatarDataAtual()} numDoc={numDoc} />
       )}
 
-      {modoAtual === "bahia" && !snapshot && <BahiaArea />}
+      {modoAtual === "bahia" && !snapshot && <BahiaArea numNota={numNota} />}
 
       {modoAtual === "recentes" && !snapshot && <RecentesArea onReabrir={reabrirNota} />}
 

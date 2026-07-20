@@ -130,6 +130,19 @@ export default function TopBar({
           </button>
         </div>
 
+        {modoAtual === "bahia" && (
+          <div className="input-group input-group-sm" style={{ width: 140 }}>
+            <span className="input-group-text">Nota Nº</span>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="000"
+              value={numNota}
+              onChange={(e) => onNumNotaChange(e.target.value)}
+            />
+          </div>
+        )}
+
         {modoAtual === "documento" && (
           <div className="input-group input-group-sm" style={{ width: 150 }}>
             <span className="input-group-text">Doc Nº</span>
