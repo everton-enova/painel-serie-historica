@@ -23,13 +23,19 @@ var ABA_SAEB_BAHIA = 'Saeb_BAHIA';
 // Quando os resultados forem finalizados, deixe o array vazio: []
 var EDICOES_PRELIMINARES = [2025];
 
-// ══════════════════ API JSON (Next.js) ══════════════════
-// Mantida para o painel Vercel (GOOGLE_APPS_SCRIPT_URL no .env.local)
+// ══════════════════ WEB APP + API JSON ══════════════════
+// Sem parâmetros: serve o Painel (Painel.html).
+// Com ?sheets=Aba1,Aba2: API JSON usada pelo Next.js na Vercel
+// (GOOGLE_APPS_SCRIPT_URL no .env.local).
 
 function doGet(e) {
   try {
-    var sheetNames = (e.parameter.sheets || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
-    if (sheetNames.length === 0) return jsonResponse({ erro: 'Nenhuma aba solicitada.' });
+    var sheetNames = String(e && e.parameter && e.parameter.sheets || '').split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    if (sheetNames.length === 0) {
+      return HtmlService.createHtmlOutputFromFile('Painel')
+        .setTitle('Painel Série Histórica')
+        .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+    }
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var result = {};
     sheetNames.forEach(function(name) {
