@@ -84,8 +84,8 @@ export default function RecentesArea({ onReabrir }: RecentesAreaProps) {
       <div className="nota-tecnica" style={{ minHeight: "auto" }}>
         <div className="section-title" style={{ marginTop: 0 }}>🕘 NOTAS SALVAS</div>
         <p className="text-muted" style={{ fontSize: "8.5pt" }}>
-          Notas gravadas no Drive. <b>Reabrir</b> carrega a nota de volta para edição; salvar novamente sobrescreve a
-          mesma nota.
+          Notas gravadas no Drive. <b>Editar</b> carrega a nota de volta para edição; ao clicar em PDF/Imprimir ela é
+          salva de novo, sobrescrevendo a mesma nota.
         </p>
         {erro && <p className="text-danger">Erro ao listar: {erro}</p>}
         {!erro && notas === null && <p className="text-muted">Carregando...</p>}
@@ -121,7 +121,7 @@ export default function RecentesArea({ onReabrir }: RecentesAreaProps) {
                         disabled={abrindo === n.id}
                         onClick={() => reabrir(n.id)}
                       >
-                        {abrindo === n.id ? "Abrindo..." : "✏ Reabrir"}
+                        {abrindo === n.id ? "Abrindo..." : "✏ Editar"}
                       </button>{" "}
                       {n.urlPdf && (
                         <a className="btn btn-outline-secondary btn-sm" href={n.urlPdf} target="_blank" rel="noreferrer">
