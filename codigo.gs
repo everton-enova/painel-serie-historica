@@ -45,6 +45,7 @@ function doGet(e) {
         case 'recentes': return jsonResponse(listarNotasSalvas());
         case 'abrir': return jsonResponse(abrirNota(p.id));
         case 'sabeEstado': return jsonResponse(sabeEstadoFlat());
+        case 'diagnostico': return jsonResponse(diagnosticoDrive());
         default: return jsonResponse({ erro: 'Função desconhecida: ' + fn });
       }
     }
@@ -540,6 +541,25 @@ var ABA_NOTAS_SALVAS = 'Notas Salvas';
 function autorizarDrive() {
   var pastas = _pastasNotas();
   Logger.log('Acesso OK — HTML: "' + pastas.html.getName() + '" | PDF: "' + pastas.pdf.getName() + '"');
+}
+
+// Diagnóstico via URL: /exec?fn=diagnostico
+// Mostra em qual conta o Web App executa e se o Drive está acessível.
+function diagnosticoDrive() {
+  var out = { executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
+  try {
+    out.executaComo = Session.getEffectiveUser().getEmail() || '(vazio)';
+  } catch (e0) {
+    out.executaComo = '(indisponível: ' + e0.message + ')';
+  }
+  try {
+    var pastas = _pastasNotas();
+    out.pastaHtml = pastas.html.getName();
+    out.pastaPdf = pastas.pdf.getName();
+  } catch (e) {
+    out.erroDrive = e.message;
+  }
+  return out;
 }
 
 function _pastasNotas() {
