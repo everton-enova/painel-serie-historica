@@ -64,7 +64,8 @@ export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
     }
 
     return pdf.output("datauristring").split(",")[1] ?? null;
-  } catch {
+  } catch (e) {
+    console.error("gerarPdfBase64 falhou:", e);
     return null;
   }
 }

@@ -31,6 +31,7 @@ interface RespostaSalvar {
   urlPdf?: string;
   aviso?: string;
   atualizadoEm?: string;
+  pdfOrigem?: string;
 }
 
 export default function Home() {
@@ -264,10 +265,14 @@ export default function Home() {
 
     setSalvando(true);
     try {
+      let pdfEnviado = false;
       if (elNota) {
         const { gerarPdfBase64 } = await import("@/lib/pdfNota");
         const pdf = await gerarPdfBase64(elNota);
-        if (pdf) payload.pdfBase64 = pdf;
+        if (pdf) {
+          payload.pdfBase64 = pdf;
+          pdfEnviado = true;
+        }
       }
       const res = await fetch("/api/notas", {
         method: "POST",
@@ -283,6 +288,11 @@ export default function Home() {
       let msg = `Nota salva no Drive (${dados.atualizadoEm || ""}).`;
       if (dados.urlPdf) msg += `<br><a href="${dados.urlPdf}" target="_blank">Abrir PDF</a>`;
       if (dados.aviso) msg += `<br><small style="color:#e65100">${dados.aviso}</small>`;
+      if (!pdfEnviado) {
+        msg += `<br><small style="color:#e65100">A captura do PDF no navegador falhou — o Drive recebeu a conversão simplificada do Google.</small>`;
+      } else if (dados.pdfOrigem !== "navegador") {
+        msg += `<br><small style="color:#e65100">O Apps Script implantado ainda é a versão antiga — atualize o codigo.gs e implante uma Nova versão para o PDF fiel à tela.</small>`;
+      }
       popupAlerta("Salvo", msg, "success");
     } catch (err) {
       popupAlerta("Erro ao salvar", err instanceof Error ? err.message : String(err), "error");

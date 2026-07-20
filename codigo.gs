@@ -574,7 +574,7 @@ function diagnosticoEscritaDrive() {
 // Diagnóstico via URL: /exec?fn=diagnostico
 // Mostra em qual conta o Web App executa e se o Drive está acessível.
 function diagnosticoDrive() {
-  var out = { executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
+  var out = { versao: 'v10.7', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
   try {
     out.executaComo = Session.getEffectiveUser().getEmail() || '(vazio)';
   } catch (e0) {
@@ -667,10 +667,11 @@ function salvarNota(payload) {
   var blobHtml = Utilities.newBlob(docHtml, 'text/html', nomeBase + '.html');
 
   // PDF: preferir o gerado no navegador (fiel à tela); sem ele, converter o HTML.
-  var blobPdf = null, avisoPdf = '';
+  var blobPdf = null, avisoPdf = '', pdfOrigem = 'conversao';
   if (payload.pdfBase64) {
     try {
       blobPdf = Utilities.newBlob(Utilities.base64Decode(payload.pdfBase64), 'application/pdf', nomeBase + '.pdf');
+      pdfOrigem = 'navegador';
     } catch (ePdf) {
       blobPdf = null;
     }
@@ -716,6 +717,7 @@ function salvarNota(payload) {
     sucesso: true,
     id: id,
     aviso: avisoPdf,
+    pdfOrigem: pdfOrigem,
     urlHtml: _linkDrive(htmlFile.getId()),
     urlPdf: pdfFile ? _linkDrive(pdfFile.getId()) : '',
     atualizadoEm: agora
