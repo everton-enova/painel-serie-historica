@@ -177,6 +177,14 @@ export default function Home() {
     else setNumNota(nota.numero || "");
   }
 
+  // Rótulo das avaliações presentes na nota, para o título salvo:
+  // "SABE", "Saeb" ou "SABE/Saeb" conforme os filtros marcados.
+  function rotuloAvaliacoes(sabe: boolean, saeb: boolean): string {
+    if (sabe && !saeb) return "SABE";
+    if (!sabe && saeb) return "Saeb";
+    return "SABE/Saeb";
+  }
+
   // Salva o HTML da nota no Drive (aba Recentes) sem interromper o fluxo:
   // chamado automaticamente ao clicar em PDF/Imprimir. Sem nada para salvar,
   // não faz nada; só exibe popup em caso de erro.
@@ -225,7 +233,10 @@ export default function Home() {
       if (el) {
         payload = {
           id: notaAbertaId,
-          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA} — BAHIA`,
+          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA} — Resultado do ${rotuloAvaliacoes(
+            !!document.getElementById("secaoBahiaSabe"),
+            !!document.getElementById("secaoBahiaSaeb")
+          )} - BAHIA`,
           tipo: "bahia",
           numero: num,
           entidade: "ESTADO DA BAHIA",
@@ -238,7 +249,7 @@ export default function Home() {
       if (el) {
         payload = {
           id: notaAbertaId,
-          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA} — ${info.nome}`,
+          titulo: `NOTA TÉCNICA ${num || "___"}/${ANO_NOTA} — Resultado do ${rotuloAvaliacoes(checkSabe, checkSaeb)} - ${info.nome}`,
           tipo: modoAtual,
           numero: num,
           entidade: String(info.nome),
