@@ -60,6 +60,29 @@ a {
   position: relative;
 }
 
+/* Variante larga do cartão para a tela Recentes (tabela de arquivos) */
+.recentes-card {
+  width: min(1250px, 96vw);
+  min-height: auto;
+  padding: 22px 28px;
+}
+.recentes-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.recentes-card .modern-table td {
+  vertical-align: middle;
+}
+.recentes-card input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
 .header-modern {
   display: flex;
   justify-content: space-between;
