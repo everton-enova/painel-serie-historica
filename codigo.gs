@@ -528,13 +528,14 @@ function listarRegionais() {
 
 // ══════════════════ NOTAS SALVAS (Drive + aba índice) ══════════════════
 // As notas são gravadas em pastas fixas do Drive do proprietário:
-//   PASTA_PDF_ID  → notas finais em PDF (download/arquivamento)
-//   PASTA_HTML_ID → HTML temporário dos "recentes", reeditável no painel
-// A aba "Notas Salvas" da planilha é o índice que alimenta a tela Recentes.
+//   PASTA_PDF_ID  → legado (PDFs de versões antigas)
+//   PASTA_HTML_ID → HTML dos "recentes", reeditável no painel
+// Não há aba de índice na planilha: a pasta do Drive É o índice. O id da nota
+// é o id do arquivo HTML e os metadados (tipo/entidade/numero/autor) ficam na
+// descrição do arquivo, em JSON.
 
 var PASTA_PDF_ID = '1GOsFZZhfBvKwIsTTXcTFuNr6ZkqL83zn';
 var PASTA_HTML_ID = '1E7vAjG2J_SFJ4VgKZVc_PgnK3-tp1N5W';
-var ABA_NOTAS_SALVAS = 'Notas Salvas';
 
 // Execute esta função UMA VEZ no editor do Apps Script (Executar ▶) para
 // autorizar o acesso ao Drive e conferir se as duas pastas estão acessíveis.
@@ -574,7 +575,7 @@ function diagnosticoEscritaDrive() {
 // Diagnóstico via URL: /exec?fn=diagnostico
 // Mostra em qual conta o Web App executa e se o Drive está acessível.
 function diagnosticoDrive() {
-  var out = { versao: 'v11.2', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
+  var out = { versao: 'v12', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
   try {
     out.executaComo = Session.getEffectiveUser().getEmail() || '(vazio)';
   } catch (e0) {
@@ -601,29 +602,27 @@ function _pastasNotas() {
   }
 }
 
-function _abaNotas() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheetByName(ABA_NOTAS_SALVAS);
-  if (!sh) {
-    sh = ss.insertSheet(ABA_NOTAS_SALVAS);
-    sh.appendRow(['ID', 'TITULO', 'TIPO', 'ENTIDADE', 'NUMERO', 'AUTOR', 'CRIADO_EM', 'ATUALIZADO_EM', 'HTML_ID', 'PDF_ID']);
-    sh.setFrozenRows(1);
-  }
-  return sh;
-}
-
 function _agora() {
-  // Fuso fixo: não depende do fuso do projeto Apps Script nem da planilha.
+  // Fuso fixo: não depende do fuso do projeto Apps Script.
   return Utilities.formatDate(new Date(), 'America/Bahia', 'dd/MM/yyyy HH:mm');
 }
 
-// A planilha converte "dd/MM/yyyy HH:mm" em Date; ao ler de volta, normaliza
-// para o texto pt-BR no fuso da Bahia (legado). Valores já em texto passam direto.
-function _fmtData(v) {
-  if (v && typeof v.getTime === 'function') {
-    return Utilities.formatDate(v, 'America/Bahia', 'dd/MM/yyyy HH:mm');
+function _fmtData(d) {
+  return Utilities.formatDate(d, 'America/Bahia', 'dd/MM/yyyy HH:mm');
+}
+
+// Metadados da nota guardados na descrição do arquivo HTML (JSON).
+function _metaNota(file) {
+  try {
+    var m = JSON.parse(file.getDescription() || '{}');
+    return { tipo: String(m.tipo || '-'), entidade: String(m.entidade || '-'), numero: String(m.numero || ''), autor: String(m.autor || '-') };
+  } catch (e) {
+    return { tipo: '-', entidade: '-', numero: '', autor: '-' };
   }
-  return String(v || '');
+}
+
+function _tituloNota(file) {
+  return String(file.getName()).replace(/\.html?$/i, '');
 }
 
 // Documento HTML completo salvo no Drive. O conteúdo original fica entre os
@@ -650,135 +649,107 @@ function _linkDrive(fileId) {
   return fileId ? 'https://drive.google.com/file/d/' + fileId + '/view' : '';
 }
 
-// Salva (ou sobrescreve) uma nota. Sobrescreve quando payload.id existe
-// ou quando já há nota do mesmo tipo com o mesmo número.
+// Salva (ou sobrescreve) uma nota. Sobrescreve quando payload.id (id do
+// arquivo HTML) existe ou quando já há nota do mesmo tipo com o mesmo número.
 function salvarNota(payload) {
   if (!payload || !payload.html) return { erro: 'Nada para salvar.' };
 
-  var sh = _abaNotas();
   var pastas = _pastasNotas();
-  var dados = sh.getDataRange().getValues();
-
-  var linha = -1;
-  if (payload.id) {
-    for (var i = 1; i < dados.length; i++) {
-      if (String(dados[i][0]) === String(payload.id)) { linha = i; break; }
-    }
-  }
-  if (linha < 0 && payload.numero) {
-    for (var j = 1; j < dados.length; j++) {
-      if (String(dados[j][2]) === String(payload.tipo) && String(dados[j][4]) === String(payload.numero)) { linha = j; break; }
-    }
-  }
-
   var titulo = String(payload.titulo || 'NOTA').trim();
   var nomeBase = titulo.replace(/[\\\/:*?"<>|]/g, '-');
   var docHtml = _docCompletoNota(titulo, payload.html);
-  var blobHtml = Utilities.newBlob(docHtml, 'text/html', nomeBase + '.html');
+  var meta = JSON.stringify({
+    tipo: payload.tipo || '-',
+    entidade: payload.entidade || '-',
+    numero: payload.numero || '',
+    autor: payload.autor || '-'
+  });
 
-  // Apenas o HTML é salvo no Drive (para reabrir nos Recentes). O PDF oficial
-  // é o que o usuário gera pelo botão PDF/Imprimir no próprio navegador.
-  var agora = _agora();
-  var id, criadoEm, htmlFile;
-
-  if (linha >= 0) {
-    // Sobrescreve: atualiza o HTML no lugar; PDF antigo (de versões anteriores) é descartado
-    id = String(dados[linha][0]);
-    criadoEm = _fmtData(dados[linha][6]);
+  var htmlFile = null;
+  if (payload.id) {
     try {
-      htmlFile = DriveApp.getFileById(String(dados[linha][8]));
-      htmlFile.setContent(docHtml);
-      htmlFile.setName(nomeBase + '.html');
-    } catch (e2) {
-      htmlFile = pastas.html.createFile(blobHtml);
-    }
-    if (dados[linha][9]) {
-      try { DriveApp.getFileById(String(dados[linha][9])).setTrashed(true); } catch (e3) {}
-    }
-    // Apóstrofo inicial força a planilha a guardar a data como texto (sem
-    // reinterpretar no fuso dela) — ao ler de volta, o apóstrofo não aparece.
-    sh.getRange(linha + 1, 1, 1, 10).setValues([[id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
-      payload.autor || '-', "'" + criadoEm, "'" + agora, htmlFile.getId(), '']]);
-  } else {
-    id = Utilities.getUuid();
-    htmlFile = pastas.html.createFile(blobHtml);
-    sh.appendRow([id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
-      payload.autor || '-', "'" + agora, "'" + agora, htmlFile.getId(), '']);
+      var f = DriveApp.getFileById(String(payload.id));
+      if (!f.isTrashed()) htmlFile = f;
+    } catch (e1) {}
   }
+  if (!htmlFile && payload.numero) {
+    var it = pastas.html.getFiles();
+    while (it.hasNext()) {
+      var cand = it.next();
+      var m = _metaNota(cand);
+      if (m.tipo === String(payload.tipo) && m.numero === String(payload.numero)) { htmlFile = cand; break; }
+    }
+  }
+
+  if (htmlFile) {
+    htmlFile.setContent(docHtml);
+    htmlFile.setName(nomeBase + '.html');
+  } else {
+    htmlFile = pastas.html.createFile(Utilities.newBlob(docHtml, 'text/html', nomeBase + '.html'));
+  }
+  htmlFile.setDescription(meta);
 
   return {
     sucesso: true,
-    id: id,
+    id: htmlFile.getId(),
     urlHtml: _linkDrive(htmlFile.getId()),
-    atualizadoEm: agora
+    atualizadoEm: _agora()
   };
 }
 
 function listarNotasSalvas() {
-  var sh = _abaNotas();
-  var dados = sh.getDataRange().getValues();
+  var pastas = _pastasNotas();
   var out = [];
-  for (var i = 1; i < dados.length; i++) {
-    var r = dados[i];
-    if (!r[0]) continue;
+  var it = pastas.html.getFiles();
+  while (it.hasNext()) {
+    var f = it.next();
+    var meta = _metaNota(f);
     out.push({
-      id: String(r[0]),
-      titulo: String(r[1]),
-      tipo: String(r[2]),
-      entidade: String(r[3]),
-      numero: String(r[4]),
-      autor: String(r[5]),
-      criadoEm: _fmtData(r[6]),
-      atualizadoEm: _fmtData(r[7]),
-      urlHtml: _linkDrive(String(r[8] || '')),
-      urlPdf: _linkDrive(String(r[9] || ''))
+      id: f.getId(),
+      titulo: _tituloNota(f),
+      tipo: meta.tipo,
+      entidade: meta.entidade,
+      numero: meta.numero,
+      autor: meta.autor,
+      criadoEm: _fmtData(f.getDateCreated()),
+      atualizadoEm: _fmtData(f.getLastUpdated()),
+      _ts: f.getLastUpdated().getTime(),
+      urlHtml: _linkDrive(f.getId()),
+      urlPdf: ''
     });
   }
-  out.sort(function(a, b) { return _tsNota(b.atualizadoEm) - _tsNota(a.atualizadoEm); });
+  out.sort(function(a, b) { return b._ts - a._ts; });
+  for (var i = 0; i < out.length; i++) delete out[i]._ts;
   return out;
 }
 
-function _tsNota(s) {
-  var m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/);
-  return m ? new Date(m[3], m[2] - 1, m[1], m[4], m[5]).getTime() : 0;
-}
-
 function abrirNota(id) {
-  var sh = _abaNotas();
-  var dados = sh.getDataRange().getValues();
-  for (var i = 1; i < dados.length; i++) {
-    if (String(dados[i][0]) === String(id)) {
-      var conteudo;
-      try {
-        conteudo = DriveApp.getFileById(String(dados[i][8])).getBlob().getDataAsString('UTF-8');
-      } catch (e) {
-        return { erro: 'Arquivo não encontrado no Drive (pode ter sido excluído): ' + e.message };
-      }
-      var m = conteudo.match(/<!--NOTA-INICIO-->([\s\S]*?)<!--NOTA-FIM-->/);
-      return {
-        sucesso: true,
-        id: String(dados[i][0]),
-        titulo: String(dados[i][1]),
-        tipo: String(dados[i][2]),
-        entidade: String(dados[i][3]),
-        numero: String(dados[i][4]),
-        html: m ? m[1] : conteudo
-      };
-    }
+  var file;
+  try {
+    file = DriveApp.getFileById(String(id));
+    if (file.isTrashed()) return { erro: 'Nota não encontrada (está na lixeira do Drive).' };
+  } catch (e) {
+    return { erro: 'Arquivo não encontrado no Drive (pode ter sido excluído): ' + e.message };
   }
-  return { erro: 'Nota não encontrada no índice.' };
+  var conteudo = file.getBlob().getDataAsString('UTF-8');
+  var m = conteudo.match(/<!--NOTA-INICIO-->([\s\S]*?)<!--NOTA-FIM-->/);
+  var meta = _metaNota(file);
+  return {
+    sucesso: true,
+    id: file.getId(),
+    titulo: _tituloNota(file),
+    tipo: meta.tipo,
+    entidade: meta.entidade,
+    numero: meta.numero,
+    html: m ? m[1] : conteudo
+  };
 }
 
 function excluirNota(id) {
-  var sh = _abaNotas();
-  var dados = sh.getDataRange().getValues();
-  for (var i = 1; i < dados.length; i++) {
-    if (String(dados[i][0]) === String(id)) {
-      if (dados[i][8]) { try { DriveApp.getFileById(String(dados[i][8])).setTrashed(true); } catch (e) {} }
-      if (dados[i][9]) { try { DriveApp.getFileById(String(dados[i][9])).setTrashed(true); } catch (e2) {} }
-      sh.deleteRow(i + 1);
-      return { sucesso: true };
-    }
+  try {
+    DriveApp.getFileById(String(id)).setTrashed(true);
+    return { sucesso: true };
+  } catch (e) {
+    return { erro: 'Nota não encontrada: ' + e.message };
   }
-  return { erro: 'Nota não encontrada.' };
 }
