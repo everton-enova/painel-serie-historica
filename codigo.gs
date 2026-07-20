@@ -534,6 +534,14 @@ var PASTA_PDF_ID = '1GOsFZZhfBvKwIsTTXcTFuNr6ZkqL83zn';
 var PASTA_HTML_ID = '1E7vAjG2J_SFJ4VgKZVc_PgnK3-tp1N5W';
 var ABA_NOTAS_SALVAS = 'Notas Salvas';
 
+// Execute esta função UMA VEZ no editor do Apps Script (Executar ▶) para
+// autorizar o acesso ao Drive e conferir se as duas pastas estão acessíveis.
+// O log deve mostrar os nomes das pastas.
+function autorizarDrive() {
+  var pastas = _pastasNotas();
+  Logger.log('Acesso OK — HTML: "' + pastas.html.getName() + '" | PDF: "' + pastas.pdf.getName() + '"');
+}
+
 function _pastasNotas() {
   try {
     return {
