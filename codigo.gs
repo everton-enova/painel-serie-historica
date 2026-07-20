@@ -574,7 +574,7 @@ function diagnosticoEscritaDrive() {
 // Diagnóstico via URL: /exec?fn=diagnostico
 // Mostra em qual conta o Web App executa e se o Drive está acessível.
 function diagnosticoDrive() {
-  var out = { versao: 'v10.8', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
+  var out = { versao: 'v11', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
   try {
     out.executaComo = Session.getEffectiveUser().getEmail() || '(vazio)';
   } catch (e0) {
@@ -666,30 +666,13 @@ function salvarNota(payload) {
   var docHtml = _docCompletoNota(titulo, payload.html);
   var blobHtml = Utilities.newBlob(docHtml, 'text/html', nomeBase + '.html');
 
-  // PDF: preferir o gerado no navegador (fiel à tela); sem ele, converter o HTML.
-  var blobPdf = null, avisoPdf = '', pdfOrigem = 'conversao';
-  if (payload.pdfBase64) {
-    try {
-      blobPdf = Utilities.newBlob(Utilities.base64Decode(payload.pdfBase64), 'application/pdf', nomeBase + '.pdf');
-      pdfOrigem = 'navegador';
-    } catch (ePdf) {
-      blobPdf = null;
-    }
-  }
-  if (!blobPdf) {
-    try {
-      blobPdf = blobHtml.getAs('application/pdf');
-      blobPdf.setName(nomeBase + '.pdf');
-    } catch (e) {
-      avisoPdf = 'HTML salvo, mas a conversão para PDF falhou: ' + e.message;
-    }
-  }
-
+  // Apenas o HTML é salvo no Drive (para reabrir nos Recentes). O PDF oficial
+  // é o que o usuário gera pelo botão PDF/Imprimir no próprio navegador.
   var agora = _agora();
-  var id, criadoEm, htmlFile, pdfFile = null;
+  var id, criadoEm, htmlFile;
 
   if (linha >= 0) {
-    // Sobrescreve: atualiza o HTML no lugar; PDF é recriado (binário não tem setContent)
+    // Sobrescreve: atualiza o HTML no lugar; PDF antigo (de versões anteriores) é descartado
     id = String(dados[linha][0]);
     criadoEm = dados[linha][6];
     try {
@@ -702,24 +685,19 @@ function salvarNota(payload) {
     if (dados[linha][9]) {
       try { DriveApp.getFileById(String(dados[linha][9])).setTrashed(true); } catch (e3) {}
     }
-    if (blobPdf) pdfFile = pastas.pdf.createFile(blobPdf);
     sh.getRange(linha + 1, 1, 1, 10).setValues([[id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
-      payload.autor || '-', criadoEm, agora, htmlFile.getId(), pdfFile ? pdfFile.getId() : '']]);
+      payload.autor || '-', criadoEm, agora, htmlFile.getId(), '']]);
   } else {
     id = Utilities.getUuid();
     htmlFile = pastas.html.createFile(blobHtml);
-    if (blobPdf) pdfFile = pastas.pdf.createFile(blobPdf);
     sh.appendRow([id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
-      payload.autor || '-', agora, agora, htmlFile.getId(), pdfFile ? pdfFile.getId() : '']);
+      payload.autor || '-', agora, agora, htmlFile.getId(), '']);
   }
 
   return {
     sucesso: true,
     id: id,
-    aviso: avisoPdf,
-    pdfOrigem: pdfOrigem,
     urlHtml: _linkDrive(htmlFile.getId()),
-    urlPdf: pdfFile ? _linkDrive(pdfFile.getId()) : '',
     atualizadoEm: agora
   };
 }
