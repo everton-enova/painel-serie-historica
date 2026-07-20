@@ -471,3 +471,205 @@ function listarRegionais() {
     .sort(function(a, b) { return a - b; })
     .map(function(n) { return { num: n, nome: porNum[n].nome }; });
 }
+
+// ══════════════════ NOTAS SALVAS (Drive + aba índice) ══════════════════
+// Estrutura no Drive do proprietário do script:
+//   Painel Série Histórica — Notas/
+//     ├── Recentes (HTML)/   ← fonte da verdade, reeditável no painel
+//     └── Notas (PDF)/       ← cópia em PDF para download/arquivamento
+// A aba "Notas Salvas" da planilha é o índice que alimenta a tela Recentes.
+
+var PASTA_RAIZ_NOTAS = 'Painel Série Histórica — Notas';
+var SUBPASTA_HTML = 'Recentes (HTML)';
+var SUBPASTA_PDF = 'Notas (PDF)';
+var ABA_NOTAS_SALVAS = 'Notas Salvas';
+
+function _obterPasta(pai, nome) {
+  var it = pai.getFoldersByName(nome);
+  return it.hasNext() ? it.next() : pai.createFolder(nome);
+}
+
+function _pastasNotas() {
+  var raiz = _obterPasta(DriveApp.getRootFolder(), PASTA_RAIZ_NOTAS);
+  return { html: _obterPasta(raiz, SUBPASTA_HTML), pdf: _obterPasta(raiz, SUBPASTA_PDF) };
+}
+
+function _abaNotas() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(ABA_NOTAS_SALVAS);
+  if (!sh) {
+    sh = ss.insertSheet(ABA_NOTAS_SALVAS);
+    sh.appendRow(['ID', 'TITULO', 'TIPO', 'ENTIDADE', 'NUMERO', 'AUTOR', 'CRIADO_EM', 'ATUALIZADO_EM', 'HTML_ID', 'PDF_ID']);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+function _agora() {
+  return Utilities.formatDate(new Date(), Session.getScriptTimeZone() || 'America/Bahia', 'dd/MM/yyyy HH:mm');
+}
+
+// Documento HTML completo salvo no Drive. O conteúdo original fica entre os
+// marcadores NOTA-INICIO/NOTA-FIM para ser extraído intacto ao reabrir.
+function _docCompletoNota(titulo, htmlInterno) {
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + (titulo || 'Nota') + '</title><style>' +
+    'body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#333;margin:24px;}' +
+    'table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:10px;}' +
+    'th{background:#002060;color:#fff;padding:6px 5px;text-align:center;font-size:8pt;}' +
+    'td{padding:6px 5px;border-bottom:1px solid #e0e0e0;text-align:center;}' +
+    '.section-title{font-size:10pt;font-weight:bold;color:#002060;text-transform:uppercase;border-bottom:1px solid #ddd;padding-bottom:5px;margin:20px 0 10px;}' +
+    '.school-card{background:#f8f9fa;border-left:5px solid #002060;padding:12px;margin-bottom:20px;}' +
+    '.school-name{font-size:11pt;font-weight:bold;text-transform:uppercase;}' +
+    '.analysis-box{font-size:9.5pt;line-height:1.5;text-align:justify;margin-bottom:12px;}' +
+    '.header-title{font-size:16pt;font-weight:bold;color:#002060;text-transform:uppercase;}' +
+    '.header-meta{font-size:8pt;color:#666;}' +
+    '.badge-nivel{padding:2px 6px;border-radius:10px;font-size:7.5pt;}' +
+    '.footer-mini{font-size:7pt;color:#999;text-align:center;margin-top:20px;}' +
+    'img{max-width:100%;}' +
+    '</style></head><body><!--NOTA-INICIO-->' + htmlInterno + '<!--NOTA-FIM--></body></html>';
+}
+
+function _linkDrive(fileId) {
+  return fileId ? 'https://drive.google.com/file/d/' + fileId + '/view' : '';
+}
+
+// Salva (ou sobrescreve) uma nota. Sobrescreve quando payload.id existe
+// ou quando já há nota do mesmo tipo com o mesmo número.
+function salvarNota(payload) {
+  if (!payload || !payload.html) return { erro: 'Nada para salvar.' };
+
+  var sh = _abaNotas();
+  var pastas = _pastasNotas();
+  var dados = sh.getDataRange().getValues();
+
+  var linha = -1;
+  if (payload.id) {
+    for (var i = 1; i < dados.length; i++) {
+      if (String(dados[i][0]) === String(payload.id)) { linha = i; break; }
+    }
+  }
+  if (linha < 0 && payload.numero) {
+    for (var j = 1; j < dados.length; j++) {
+      if (String(dados[j][2]) === String(payload.tipo) && String(dados[j][4]) === String(payload.numero)) { linha = j; break; }
+    }
+  }
+
+  var titulo = String(payload.titulo || 'NOTA').trim();
+  var nomeBase = titulo.replace(/[\\\/:*?"<>|]/g, '-');
+  var docHtml = _docCompletoNota(titulo, payload.html);
+  var blobHtml = Utilities.newBlob(docHtml, 'text/html', nomeBase + '.html');
+
+  var blobPdf = null, avisoPdf = '';
+  try {
+    blobPdf = blobHtml.getAs('application/pdf');
+    blobPdf.setName(nomeBase + '.pdf');
+  } catch (e) {
+    avisoPdf = 'HTML salvo, mas a conversão para PDF falhou: ' + e.message;
+  }
+
+  var agora = _agora();
+  var id, criadoEm, htmlFile, pdfFile = null;
+
+  if (linha >= 0) {
+    // Sobrescreve: atualiza o HTML no lugar; PDF é recriado (binário não tem setContent)
+    id = String(dados[linha][0]);
+    criadoEm = dados[linha][6];
+    try {
+      htmlFile = DriveApp.getFileById(String(dados[linha][8]));
+      htmlFile.setContent(docHtml);
+      htmlFile.setName(nomeBase + '.html');
+    } catch (e2) {
+      htmlFile = pastas.html.createFile(blobHtml);
+    }
+    if (dados[linha][9]) {
+      try { DriveApp.getFileById(String(dados[linha][9])).setTrashed(true); } catch (e3) {}
+    }
+    if (blobPdf) pdfFile = pastas.pdf.createFile(blobPdf);
+    sh.getRange(linha + 1, 1, 1, 10).setValues([[id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
+      payload.autor || '-', criadoEm, agora, htmlFile.getId(), pdfFile ? pdfFile.getId() : '']]);
+  } else {
+    id = Utilities.getUuid();
+    htmlFile = pastas.html.createFile(blobHtml);
+    if (blobPdf) pdfFile = pastas.pdf.createFile(blobPdf);
+    sh.appendRow([id, titulo, payload.tipo || '-', payload.entidade || '-', payload.numero || '',
+      payload.autor || '-', agora, agora, htmlFile.getId(), pdfFile ? pdfFile.getId() : '']);
+  }
+
+  return {
+    sucesso: true,
+    id: id,
+    aviso: avisoPdf,
+    urlHtml: _linkDrive(htmlFile.getId()),
+    urlPdf: pdfFile ? _linkDrive(pdfFile.getId()) : '',
+    atualizadoEm: agora
+  };
+}
+
+function listarNotasSalvas() {
+  var sh = _abaNotas();
+  var dados = sh.getDataRange().getValues();
+  var out = [];
+  for (var i = 1; i < dados.length; i++) {
+    var r = dados[i];
+    if (!r[0]) continue;
+    out.push({
+      id: String(r[0]),
+      titulo: String(r[1]),
+      tipo: String(r[2]),
+      entidade: String(r[3]),
+      numero: String(r[4]),
+      autor: String(r[5]),
+      criadoEm: String(r[6]),
+      atualizadoEm: String(r[7]),
+      urlHtml: _linkDrive(String(r[8] || '')),
+      urlPdf: _linkDrive(String(r[9] || ''))
+    });
+  }
+  out.sort(function(a, b) { return _tsNota(b.atualizadoEm) - _tsNota(a.atualizadoEm); });
+  return out;
+}
+
+function _tsNota(s) {
+  var m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/);
+  return m ? new Date(m[3], m[2] - 1, m[1], m[4], m[5]).getTime() : 0;
+}
+
+function abrirNota(id) {
+  var sh = _abaNotas();
+  var dados = sh.getDataRange().getValues();
+  for (var i = 1; i < dados.length; i++) {
+    if (String(dados[i][0]) === String(id)) {
+      var conteudo;
+      try {
+        conteudo = DriveApp.getFileById(String(dados[i][8])).getBlob().getDataAsString('UTF-8');
+      } catch (e) {
+        return { erro: 'Arquivo não encontrado no Drive (pode ter sido excluído): ' + e.message };
+      }
+      var m = conteudo.match(/<!--NOTA-INICIO-->([\s\S]*?)<!--NOTA-FIM-->/);
+      return {
+        sucesso: true,
+        id: String(dados[i][0]),
+        titulo: String(dados[i][1]),
+        tipo: String(dados[i][2]),
+        entidade: String(dados[i][3]),
+        numero: String(dados[i][4]),
+        html: m ? m[1] : conteudo
+      };
+    }
+  }
+  return { erro: 'Nota não encontrada no índice.' };
+}
+
+function excluirNota(id) {
+  var sh = _abaNotas();
+  var dados = sh.getDataRange().getValues();
+  for (var i = 1; i < dados.length; i++) {
+    if (String(dados[i][0]) === String(id)) {
+      if (dados[i][8]) { try { DriveApp.getFileById(String(dados[i][8])).setTrashed(true); } catch (e) {} }
+      if (dados[i][9]) { try { DriveApp.getFileById(String(dados[i][9])).setTrashed(true); } catch (e2) {} }
+      sh.deleteRow(i + 1);
+      return { sucesso: true };
+    }
+  }
+  return { erro: 'Nota não encontrada.' };
+}
