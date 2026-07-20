@@ -2,6 +2,20 @@
 // ao Drive. Retorna o PDF em base64, ou null se a captura falhar — nesse
 // caso o backend cai na conversão HTML→PDF do Google.
 
+// A captura usa os estilos de TELA; este CSS replica o que o @media print do
+// globals.css esconde/limpa, para o PDF sair igual ao impresso no PC.
+const CSS_MODO_IMPRESSAO = `
+  .no-print, .top-bar, #loginScreen, .doc-toolbar,
+  .logo-placeholder, .logo-clear-btn, .logo-resize-handle, .logo-size-panel,
+  .html-block-bar, .img-wrapper .resize-handle, .img-size-panel,
+  .html-fixed-panel-header, .html-fixed-panel-body textarea, .html-fixed-panel-footer,
+  .bahia-filtros-bar { display: none !important; }
+  .img-wrapper.selected img,
+  .logo-upload-wrap.logo-selected .logo-img-loaded { outline: none !important; }
+  .html-block, .doc-title-editable, .analysis-box { border: none !important; background: transparent !important; }
+  .html-fixed-render-area { border: none !important; }
+`;
+
 export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
   try {
     const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
@@ -13,6 +27,11 @@ export async function gerarPdfBase64(el: HTMLElement): Promise<string | null> {
       scale: 2,
       useCORS: true,
       backgroundColor: "#ffffff",
+      onclone: (doc) => {
+        const style = doc.createElement("style");
+        style.textContent = CSS_MODO_IMPRESSAO;
+        doc.head.appendChild(style);
+      },
     });
 
     const pdf = new jsPDF({ unit: "mm", format: "a4" });
