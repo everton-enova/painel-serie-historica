@@ -21,7 +21,7 @@ var ABA_SAEB_BAHIA = 'Saeb_BAHIA';
 
 // Edições SABE marcadas como preliminares no painel.
 // Quando os resultados forem finalizados, deixe o array vazio: []
-var EDICOES_PRELIMINARES = [2025];
+var EDICOES_PRELIMINARES = [];
 
 // ══════════════════ WEB APP + API JSON ══════════════════
 // Sem parâmetros: serve o Painel (Painel.html).
@@ -574,7 +574,7 @@ function diagnosticoEscritaDrive() {
 // Diagnóstico via URL: /exec?fn=diagnostico
 // Mostra em qual conta o Web App executa e se o Drive está acessível.
 function diagnosticoDrive() {
-  var out = { versao: 'v10.7', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
+  var out = { versao: 'v10.8', executaComo: '', pastaHtml: '', pastaPdf: '', erroDrive: '' };
   try {
     out.executaComo = Session.getEffectiveUser().getEmail() || '(vazio)';
   } catch (e0) {
