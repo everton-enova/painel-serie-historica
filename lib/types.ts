@@ -67,6 +67,9 @@ export interface NotaSalvaMeta {
   atualizadoEm: string;
   urlHtml: string;
   urlPdf: string;
+  /** Nome de quem está com a nota aberta para edição agora ("" = livre). */
+  editandoPor: string;
+  editandoDesde: string;
 }
 
 export interface NotaAberta {
@@ -77,6 +80,10 @@ export interface NotaAberta {
   entidade: string;
   numero: string;
   html: string;
+  /** true quando outra pessoa está editando: abre sem permitir salvar. */
+  somenteLeitura?: boolean;
+  editandoPor?: string;
+  editandoDesde?: string;
 }
 
 export interface RespostaErro {

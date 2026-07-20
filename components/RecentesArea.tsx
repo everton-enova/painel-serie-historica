@@ -44,30 +44,44 @@ function nomeArquivo(titulo: string): string {
 
 interface RecentesAreaProps {
   onReabrir: (nota: NotaAberta) => void;
+  usuarioLogado: string;
 }
 
-export default function RecentesArea({ onReabrir }: RecentesAreaProps) {
+// De quanto em quanto tempo a lista se atualiza sozinha, para o aviso de
+// "em edição" aparecer/sumir sem o usuário precisar recarregar a página.
+const INTERVALO_ATUALIZACAO_MS = 30000;
+
+export default function RecentesArea({ onReabrir, usuarioLogado }: RecentesAreaProps) {
   const [notas, setNotas] = useState<NotaSalvaMeta[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const [selecionados, setSelecionados] = useState<Set<string>>(new Set());
   const [processando, setProcessando] = useState<string | null>(null);
 
-  const carregar = useCallback(() => {
-    setNotas(null);
-    setErro(null);
-    setSelecionados(new Set());
+  // silencioso: usado pelo refresh automático — não pisca "Carregando..." nem
+  // descarta as caixas já marcadas.
+  const carregar = useCallback((silencioso = false) => {
+    if (!silencioso) {
+      setNotas(null);
+      setErro(null);
+      setSelecionados(new Set());
+    }
     fetch("/api/notas")
       .then((r) => r.json())
       .then((d) => {
-        if (d.erro) setErro(d.erro);
-        else setNotas(d as NotaSalvaMeta[]);
+        if (d.erro) {
+          if (!silencioso) setErro(d.erro);
+        } else setNotas(d as NotaSalvaMeta[]);
       })
-      .catch((e) => setErro(e instanceof Error ? e.message : String(e)));
+      .catch((e) => {
+        if (!silencioso) setErro(e instanceof Error ? e.message : String(e));
+      });
   }, []);
 
   useEffect(() => {
     carregar();
+    const t = setInterval(() => carregar(true), INTERVALO_ATUALIZACAO_MS);
+    return () => clearInterval(t);
   }, [carregar]);
 
   function alternarSelecao(id: string) {
@@ -89,11 +103,24 @@ export default function RecentesArea({ onReabrir }: RecentesAreaProps) {
   async function reabrir(id: string) {
     setAbrindo(id);
     try {
-      const res = await fetch(`/api/notas?id=${encodeURIComponent(id)}`);
+      const res = await fetch(
+        `/api/notas?id=${encodeURIComponent(id)}&autor=${encodeURIComponent(usuarioLogado)}`
+      );
       const dados = await res.json();
       if (dados.erro || !dados.sucesso) {
         popupAlerta("Erro", dados.erro || "Não foi possível abrir a nota.", "error");
         return;
+      }
+      // Outra pessoa está com a nota aberta: abre em modo leitura.
+      if (dados.somenteLeitura) {
+        popupAlerta(
+          "Nota em edição",
+          `<b>${dados.editandoPor}</b> está editando esta nota${
+            dados.editandoDesde ? " desde " + dados.editandoDesde : ""
+          }.<br><br>Ela será aberta <b>somente para leitura</b> — as alterações não poderão ser salvas enquanto a outra edição estiver aberta.`,
+          "warning"
+        );
+        carregar(true);
       }
       onReabrir(dados as NotaAberta);
     } catch (e) {
@@ -248,19 +275,36 @@ export default function RecentesArea({ onReabrir }: RecentesAreaProps) {
                       </td>
                       <td style={{ textAlign: "left" }}>
                         <strong>{n.titulo}</strong>
+                        {n.editandoPor && n.editandoPor !== usuarioLogado && (
+                          <div style={{ fontSize: "8pt", color: "#b8860b", marginTop: 2 }}>
+                            🔒 {n.editandoPor} está editando
+                            {n.editandoDesde ? ` desde ${n.editandoDesde}` : ""}
+                          </div>
+                        )}
+                        {n.editandoPor && n.editandoPor === usuarioLogado && (
+                          <div style={{ fontSize: "8pt", color: "#198754", marginTop: 2 }}>
+                            ✏ Você está com esta nota aberta
+                          </div>
+                        )}
                       </td>
                       <td>{ROTULOS[n.tipo] || n.tipo}</td>
                       <td style={{ textAlign: "left" }}>{n.entidade || "-"}</td>
                       <td>{n.autor || "-"}</td>
                       <td style={{ whiteSpace: "nowrap" }}>{n.atualizadoEm || "-"}</td>
                       <td style={{ whiteSpace: "nowrap" }}>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          disabled={abrindo === n.id}
-                          onClick={() => reabrir(n.id)}
-                        >
-                          {abrindo === n.id ? "Abrindo..." : "✏ Editar"}
-                        </button>{" "}
+                        {(() => {
+                          const ocupada = !!n.editandoPor && n.editandoPor !== usuarioLogado;
+                          return (
+                            <button
+                              className={ocupada ? "btn btn-outline-secondary btn-sm" : "btn btn-primary btn-sm"}
+                              disabled={abrindo === n.id}
+                              title={ocupada ? `${n.editandoPor} está editando — abre só para leitura` : undefined}
+                              onClick={() => reabrir(n.id)}
+                            >
+                              {abrindo === n.id ? "Abrindo..." : ocupada ? "👁 Ler" : "✏ Editar"}
+                            </button>
+                          );
+                        })()}{" "}
                         {n.urlPdf && (
                           <a className="btn btn-outline-secondary btn-sm" href={n.urlPdf} target="_blank" rel="noreferrer">
                             PDF

@@ -10,6 +10,7 @@ import BahiaArea from "@/components/BahiaArea";
 import RecentesArea from "@/components/RecentesArea";
 import SnapshotArea from "@/components/SnapshotArea";
 import { useSession } from "@/hooks/useSession";
+import { useTravaEdicao } from "@/hooks/useTravaEdicao";
 import { popupAlerta } from "@/lib/popup";
 import { correspondeRede } from "@/lib/normalize";
 import { formatarDataAtual, nomeArquivoNota, ANO_NOTA } from "@/lib/formatters";
@@ -29,6 +30,9 @@ interface RespostaSalvar {
   erro?: string;
   id?: string;
   atualizadoEm?: string;
+  /** true quando outra pessoa está com a nota em edição (salvamento negado). */
+  bloqueada?: boolean;
+  editandoPor?: string;
 }
 
 export default function Home() {
@@ -53,6 +57,11 @@ export default function Home() {
   const [notaAbertaId, setNotaAbertaId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<NotaAberta | null>(null);
   const [salvando, setSalvando] = useState(false);
+  // Nota aberta por outra pessoa: visível, mas sem edição nem salvamento.
+  const somenteLeitura = !!snapshot?.somenteLeitura;
+
+  // Renova a reserva enquanto a nota está aberta; libera ao sair dela.
+  useTravaEdicao(notaAbertaId, usuarioLogado || "", !somenteLeitura);
 
   const [checkSabe, setCheckSabe] = useState(true);
   const [checkSaeb, setCheckSaeb] = useState(true);
@@ -110,6 +119,8 @@ export default function Home() {
 
   function trocarModo(modo: Modo) {
     setModoAtual(modo);
+    // Fechar o snapshot solta a reserva de edição da nota reaberta.
+    if (snapshot) setNotaAbertaId(null);
     setSnapshot(null);
     if (modo === "regional") carregarRegionais();
     if (modo !== "documento" && modo !== "bahia" && modo !== "recentes") {
@@ -189,6 +200,17 @@ export default function Home() {
   // chamado automaticamente ao clicar em PDF/Imprimir. Sem nada para salvar,
   // não faz nada; só exibe popup em caso de erro.
   async function salvarNota() {
+    // Nota aberta só para leitura (outra pessoa está editando): não sobrescreve.
+    if (somenteLeitura) {
+      popupAlerta(
+        "Nota em edição",
+        `<b>${snapshot?.editandoPor || "Outro usuário"}</b> está editando esta nota. ` +
+          "Ela está aberta apenas para leitura e não será salva nos Recentes.",
+        "warning"
+      );
+      return;
+    }
+
     let payload: {
       id: string | null;
       titulo: string;
@@ -269,6 +291,10 @@ export default function Home() {
         body: JSON.stringify({ acao: "salvar", payload }),
       });
       const dados: RespostaSalvar = await res.json();
+      if (dados.bloqueada) {
+        popupAlerta("Nota em edição", dados.erro || "Outra pessoa está editando esta nota.", "warning");
+        return;
+      }
       if (dados.erro || !dados.sucesso) {
         popupAlerta("Erro ao salvar nos Recentes", dados.erro || "Falha desconhecida.", "error");
         return;
@@ -399,7 +425,9 @@ export default function Home() {
 
       {modoAtual === "bahia" && !snapshot && <BahiaArea numNota={numNota} />}
 
-      {modoAtual === "recentes" && !snapshot && <RecentesArea onReabrir={reabrirNota} />}
+      {modoAtual === "recentes" && !snapshot && (
+        <RecentesArea onReabrir={reabrirNota} usuarioLogado={usuarioLogado} />
+      )}
 
       <PopupManager />
     </div>

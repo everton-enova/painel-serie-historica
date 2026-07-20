@@ -43,7 +43,7 @@ function doGet(e) {
         case 'bahia': return jsonResponse(buscarDadosBahia());
         case 'regionais': return jsonResponse(listarRegionais());
         case 'recentes': return jsonResponse(listarNotasSalvas());
-        case 'abrir': return jsonResponse(abrirNota(p.id));
+        case 'abrir': return jsonResponse(abrirNota(p.id, p.autor));
         case 'sabeEstado': return jsonResponse(sabeEstadoFlat());
         case 'diagnostico': return jsonResponse(diagnosticoDrive());
         case 'diagnosticoEscrita': return jsonResponse(diagnosticoEscritaDrive());
@@ -73,13 +73,15 @@ function doGet(e) {
   }
 }
 
-// Escritas do app Vercel: body JSON { fn: 'salvar'|'excluir', ... }
+// Escritas do app Vercel: body JSON { fn: 'salvar'|'excluir'|'editando'|'liberar', ... }
 function doPost(e) {
   try {
     var body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     var fn = String(body.fn || '');
     if (fn === 'salvar') return jsonResponse(salvarNota(body.payload || {}));
     if (fn === 'excluir') return jsonResponse(excluirNota(body.id));
+    if (fn === 'editando') return jsonResponse(renovarEdicao(body.id, body.autor));
+    if (fn === 'liberar') return jsonResponse(liberarEdicao(body.id, body.autor));
     return jsonResponse({ erro: 'Função POST desconhecida: ' + fn });
   } catch (err) {
     return jsonResponse({ erro: err.message });
@@ -665,6 +667,18 @@ function salvarNota(payload) {
     autor: payload.autor || '-'
   });
 
+  // Não sobrescreve nota que outra pessoa está editando agora.
+  if (payload.id) {
+    var ocupada = _editandoPorOutro(payload.id, payload.autor);
+    if (ocupada) {
+      return {
+        erro: ocupada.autor + ' está editando esta nota desde ' + ocupada.desde + '. Salvamento bloqueado para não sobrescrever o trabalho de outra pessoa.',
+        bloqueada: true,
+        editandoPor: ocupada.autor
+      };
+    }
+  }
+
   var htmlFile = null;
   if (payload.id) {
     try {
@@ -679,6 +693,17 @@ function salvarNota(payload) {
       var m = _metaNota(cand);
       if (m.tipo === String(payload.tipo) && m.numero === String(payload.numero)) { htmlFile = cand; break; }
     }
+    // Achou pelo número: vale a mesma trava de edição.
+    if (htmlFile) {
+      var ocupadaNum = _editandoPorOutro(htmlFile.getId(), payload.autor);
+      if (ocupadaNum) {
+        return {
+          erro: ocupadaNum.autor + ' está editando a nota nº ' + payload.numero + ' desde ' + ocupadaNum.desde + '. Salvamento bloqueado para não sobrescrever o trabalho de outra pessoa.',
+          bloqueada: true,
+          editandoPor: ocupadaNum.autor
+        };
+      }
+    }
   }
 
   if (htmlFile) {
@@ -688,6 +713,8 @@ function salvarNota(payload) {
     htmlFile = pastas.html.createFile(Utilities.newBlob(docHtml, 'text/html', nomeBase + '.html'));
   }
   htmlFile.setDescription(meta);
+  // Quem salvou continua com a nota reservada (o painel segue no heartbeat).
+  _gravarLock(htmlFile.getId(), payload.autor);
 
   return {
     sucesso: true,
@@ -715,7 +742,26 @@ function listarNotasSalvas() {
       atualizadoEm: _fmtData(f.getLastUpdated()),
       _ts: f.getLastUpdated().getTime(),
       urlHtml: _linkDrive(f.getId()),
-      urlPdf: ''
+      urlPdf: '',
+      editandoPor: '',
+      editandoDesde: ''
+    });
+  }
+  // Uma leitura em lote do cache marca quais notas estão em edição agora.
+  if (out.length) {
+    var chaves = out.map(function(n) { return _chaveEdicao(n.id); });
+    var locks = {};
+    try {
+      locks = CacheService.getScriptCache().getAll(chaves) || {};
+    } catch (e) {}
+    out.forEach(function(n) {
+      var raw = locks[_chaveEdicao(n.id)];
+      if (!raw) return;
+      try {
+        var lock = JSON.parse(raw);
+        n.editandoPor = String(lock.autor || '');
+        n.editandoDesde = String(lock.desde || '');
+      } catch (e2) {}
     });
   }
   out.sort(function(a, b) { return b._ts - a._ts; });
@@ -723,7 +769,10 @@ function listarNotasSalvas() {
   return out;
 }
 
-function abrirNota(id) {
+// Abre a nota e, de quebra, reserva a edição para o autor. Se outra pessoa
+// estiver editando, devolve somenteLeitura: true — o painel abre a nota sem
+// permitir edição nem sobrescrita.
+function abrirNota(id, autor) {
   var file;
   try {
     file = DriveApp.getFileById(String(id));
@@ -734,6 +783,7 @@ function abrirNota(id) {
   var conteudo = file.getBlob().getDataAsString('UTF-8');
   var m = conteudo.match(/<!--NOTA-INICIO-->([\s\S]*?)<!--NOTA-FIM-->/);
   var meta = _metaNota(file);
+  var reserva = reservarEdicao(file.getId(), autor);
   return {
     sucesso: true,
     id: file.getId(),
@@ -741,8 +791,88 @@ function abrirNota(id) {
     tipo: meta.tipo,
     entidade: meta.entidade,
     numero: meta.numero,
-    html: m ? m[1] : conteudo
+    html: m ? m[1] : conteudo,
+    somenteLeitura: !!reserva.ocupado,
+    editandoPor: reserva.editandoPor || '',
+    editandoDesde: reserva.desde || ''
   };
+}
+
+// ══════════════════ TRAVA DE EDIÇÃO (presença) ══════════════════
+// Quem abre uma nota para editar reserva a nota no CacheService do script
+// (compartilhado entre todos os usuários do Web App). A reserva expira sozinha
+// em LOCK_TTL_SEG segundos e é renovada por um "heartbeat" do painel enquanto
+// a nota estiver aberta — se o navegador fechar sem avisar, a trava cai sozinha.
+
+var LOCK_TTL_SEG = 150; // reserva expira em 2min30; painel renova a cada ~45s
+
+function _chaveEdicao(id) {
+  return 'edit:' + String(id);
+}
+
+function _lerLock(id) {
+  try {
+    var raw = CacheService.getScriptCache().get(_chaveEdicao(id));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function _gravarLock(id, autor) {
+  var atual = _lerLock(id);
+  var lock = {
+    autor: String(autor || '-'),
+    desde: (atual && atual.autor === String(autor || '-') && atual.desde) || _agora()
+  };
+  CacheService.getScriptCache().put(_chaveEdicao(id), JSON.stringify(lock), LOCK_TTL_SEG);
+  return lock;
+}
+
+// Quem está editando a nota, ignorando o próprio usuário. '' quando livre.
+function _editandoPorOutro(id, autor) {
+  var lock = _lerLock(id);
+  if (!lock || !lock.autor) return null;
+  if (String(lock.autor) === String(autor || '')) return null;
+  return lock;
+}
+
+// Reserva a nota para o autor. Se outra pessoa já estiver editando, devolve
+// { ocupado: true, editandoPor, desde } e NÃO toma a trava.
+function reservarEdicao(id, autor) {
+  var trava = LockService.getScriptLock();
+  try {
+    trava.waitLock(5000);
+  } catch (e) {
+    return { ocupado: false, editandoPor: '' };
+  }
+  try {
+    var outro = _editandoPorOutro(id, autor);
+    if (outro) return { ocupado: true, editandoPor: outro.autor, desde: outro.desde };
+    _gravarLock(id, autor);
+    return { ocupado: false, editandoPor: '' };
+  } finally {
+    trava.releaseLock();
+  }
+}
+
+// Heartbeat do painel: renova a reserva enquanto a nota está aberta.
+function renovarEdicao(id, autor) {
+  if (!id) return { erro: 'Nota não informada.' };
+  var outro = _editandoPorOutro(id, autor);
+  if (outro) return { ocupado: true, editandoPor: outro.autor, desde: outro.desde };
+  _gravarLock(id, autor);
+  return { sucesso: true, ocupado: false };
+}
+
+// Libera a reserva ao fechar/sair da nota (só o dono da trava consegue).
+function liberarEdicao(id, autor) {
+  if (!id) return { sucesso: true };
+  var lock = _lerLock(id);
+  if (lock && String(lock.autor) === String(autor || '')) {
+    CacheService.getScriptCache().remove(_chaveEdicao(id));
+  }
+  return { sucesso: true };
 }
 
 function excluirNota(id) {
