@@ -189,6 +189,17 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
   }
 
   // ── Efeitos ──
+  // Semeia o conteúdo inicial UMA vez. Não usamos dangerouslySetInnerHTML porque,
+  // nesta versão do Next, o React reseta o innerHTML do editor a cada re-render,
+  // apagando blocos/tabelas/imagens inseridos manualmente no DOM.
+  useEffect(() => {
+    const ed = editorRef.current;
+    if (ed && !ed.dataset.seeded) {
+      ed.innerHTML = CONTEUDO_INICIAL;
+      ed.dataset.seeded = "1";
+    }
+  }, []);
+
   useEffect(() => {
     if (!editorRef.current) return;
     return setupKeyboardShortcuts(editorRef.current);
@@ -389,7 +400,6 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
           contentEditable
           spellCheck
           suppressContentEditableWarning
-          dangerouslySetInnerHTML={{ __html: CONTEUDO_INICIAL }}
         />
 
         <div className="footer-mini">
