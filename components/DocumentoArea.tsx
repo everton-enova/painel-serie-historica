@@ -87,7 +87,6 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
       iframe.style.border = "0";
       iframe.style.height = "600px";
       iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms");
-      iframe.srcdoc = html;
       iframe.addEventListener("load", () => {
         try {
           const doc = iframe.contentDocument;
@@ -99,6 +98,10 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
         }
       });
       cnt.appendChild(iframe);
+      // Em região contentEditable o Chrome só carrega o srcdoc se o iframe já
+      // estiver conectado ao documento — por isso setamos após o bloco entrar
+      // no editor (rAF dispara depois da inserção síncrona).
+      requestAnimationFrame(() => { iframe.srcdoc = html; });
     } else {
       cnt.innerHTML = html;
       executarScripts(cnt);
