@@ -62,8 +62,12 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
   function executarScripts(container: HTMLElement) {
     container.querySelectorAll("script").forEach((s) => {
       const ns = document.createElement("script");
-      if (s.src) ns.src = s.src;
-      else ns.textContent = s.textContent;
+      // Copia TODOS os atributos (src, type, async, defer, charset, crossorigin,
+      // e os data-* que embeds como Datawrapper/Flourish/Infogram exigem)
+      for (const attr of Array.from(s.attributes)) {
+        ns.setAttribute(attr.name, attr.value);
+      }
+      if (!s.src) ns.textContent = s.textContent;
       s.parentNode?.replaceChild(ns, s);
     });
   }
