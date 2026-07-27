@@ -72,6 +72,39 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
     });
   }
 
+  // Documento HTML completo (<!doctype>, <html>, <head>, <body>) não pode ser
+  // injetado inline — precisa ficar isolado num iframe.
+  function ehDocumentoCompleto(html: string) {
+    return /<!doctype\s+html|<html[\s>]|<head[\s>]|<body[\s>]/i.test(html);
+  }
+
+  function renderizarConteudo(cnt: HTMLElement, html: string) {
+    if (ehDocumentoCompleto(html)) {
+      cnt.innerHTML = "";
+      const iframe = document.createElement("iframe");
+      iframe.className = "html-block-iframe";
+      iframe.style.width = "100%";
+      iframe.style.border = "0";
+      iframe.style.height = "600px";
+      iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups allow-forms");
+      iframe.srcdoc = html;
+      iframe.addEventListener("load", () => {
+        try {
+          const doc = iframe.contentDocument;
+          if (doc?.documentElement) {
+            iframe.style.height = doc.documentElement.scrollHeight + "px";
+          }
+        } catch {
+          /* mantém altura padrão */
+        }
+      });
+      cnt.appendChild(iframe);
+    } else {
+      cnt.innerHTML = html;
+      executarScripts(cnt);
+    }
+  }
+
   function confirmarHtml() {
     const html = htmlInput.trim();
     if (!html) { fecharPopupHtml(); return; }
@@ -81,8 +114,7 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
       const block = document.getElementById(editingBlockId);
       const cnt = block?.querySelector(".html-block-content");
       if (cnt) {
-        cnt.innerHTML = html;
-        executarScripts(cnt as HTMLElement);
+        renderizarConteudo(cnt as HTMLElement, html);
       }
       fecharPopupHtml();
       return;
@@ -108,8 +140,7 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
 
     const cnt = document.createElement("div");
     cnt.className = "html-block-content";
-    cnt.innerHTML = html;
-    executarScripts(cnt);
+    renderizarConteudo(cnt, html);
 
     bloco.appendChild(bar);
     bloco.appendChild(cnt);
@@ -171,8 +202,9 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
         const block = editBtn.closest(".html-block") as HTMLElement;
         const cnt = block?.querySelector(".html-block-content");
         if (block && cnt) {
+          const iframe = cnt.querySelector("iframe.html-block-iframe") as HTMLIFrameElement | null;
           setEditingBlockId(block.id);
-          setHtmlInput(cnt.innerHTML);
+          setHtmlInput(iframe ? iframe.getAttribute("srcdoc") || "" : cnt.innerHTML);
           setHtmlPreview(false);
           setHtmlPopupOpen(true);
         }
@@ -392,6 +424,14 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
                   value={htmlInput}
                   onChange={(e) => setHtmlInput(e.target.value)}
                   autoFocus
+                />
+              ) : ehDocumentoCompleto(htmlInput) ? (
+                <iframe
+                  className="preview-area"
+                  title="Pré-visualização"
+                  sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                  srcDoc={htmlInput}
+                  style={{ width: "100%", height: "100%", border: "0" }}
                 />
               ) : (
                 <div className="preview-area" dangerouslySetInnerHTML={{ __html: htmlInput }} />
