@@ -188,6 +188,25 @@ export default function Home() {
     else setNumNota(nota.numero || "");
   }
 
+  function imprimirNotaDireta(nota: NotaAberta) {
+    reabrirNota(nota);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const nome = nomeArquivoNota(nota.numero, nota.titulo);
+        if (nome) {
+          const tituloOriginal = document.title;
+          document.title = nome;
+          const restaurar = () => {
+            document.title = tituloOriginal;
+            window.removeEventListener("afterprint", restaurar);
+          };
+          window.addEventListener("afterprint", restaurar);
+        }
+        window.print();
+      }, 300);
+    });
+  }
+
   // Rótulo das avaliações presentes na nota, para o título salvo:
   // "SABE", "Saeb" ou "SABE/Saeb" conforme os filtros marcados.
   function rotuloAvaliacoes(sabe: boolean, saeb: boolean): string {
@@ -451,7 +470,7 @@ export default function Home() {
       {modoAtual === "bahia" && !snapshot && <BahiaArea numNota={numNota} />}
 
       {modoAtual === "recentes" && !snapshot && (
-        <RecentesArea onReabrir={reabrirNota} usuarioLogado={usuarioLogado} />
+        <RecentesArea onReabrir={reabrirNota} onImprimirNota={imprimirNotaDireta} usuarioLogado={usuarioLogado} />
       )}
 
       <PopupManager />

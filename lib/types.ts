@@ -86,6 +86,17 @@ export interface NotaAberta {
   editandoDesde?: string;
 }
 
+export interface NotaLixeira {
+  id: string;
+  titulo: string;
+  tipo: string;
+  entidade: string;
+  numero: string;
+  autor: string;
+  excluidoEm: string;
+  diasRestantes: number;
+}
+
 export interface RespostaErro {
   erro: string;
 }

@@ -433,10 +433,10 @@ export default function BahiaArea({ numNota }: { numNota: string }) {
   const [erro, setErro] = useState<string | null>(null);
 
   const [mostrarSabe, setMostrarSabe] = useState(true);
-  const [redesSabe, setRedesSabe] = useState<string[]>([]);
+  const [redesSabeOverride, setRedesSabeOverride] = useState<string[] | null>(null);
   const [mostrarSaeb, setMostrarSaeb] = useState(true);
-  const [redesSaeb, setRedesSaeb] = useState<string[]>([]);
-  const [tipoSaeb, setTipoSaeb] = useState("");
+  const [redesSaebOverride, setRedesSaebOverride] = useState<string[] | null>(null);
+  const [tipoSaebOverride, setTipoSaebOverride] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/bahia")
@@ -456,12 +456,15 @@ export default function BahiaArea({ numNota }: { numNota: string }) {
   const etapasSabe = useMemo(() => unique(sabe.map((d) => d.etapa)).sort(), [sabe]);
   const etapasSaeb = useMemo(() => unique(saeb.map((d) => d.etapa)).sort(), [saeb]);
 
-  useEffect(() => { if (todasRedesSabe.length && redesSabe.length === 0) setRedesSabe(todasRedesSabe); }, [todasRedesSabe, redesSabe.length]);
-  useEffect(() => { if (todasRedesSaeb.length && redesSaeb.length === 0) setRedesSaeb(todasRedesSaeb); }, [todasRedesSaeb, redesSaeb.length]);
-  useEffect(() => { if (todosTiposSaeb.length && !todosTiposSaeb.includes(tipoSaeb)) setTipoSaeb(todosTiposSaeb[0]); }, [todosTiposSaeb, tipoSaeb]);
+  const redesSabe = redesSabeOverride ?? todasRedesSabe;
+  const redesSaeb = redesSaebOverride ?? todasRedesSaeb;
+  const tipoSaeb = tipoSaebOverride !== null && todosTiposSaeb.includes(tipoSaebOverride)
+    ? tipoSaebOverride
+    : (todosTiposSaeb[0] ?? "");
 
   function toggleRede(list: string[], setList: (v: string[]) => void, rede: string) {
-    setList(list.includes(rede) ? list.filter((r) => r !== rede) : [...list, rede]);
+    const next = list.includes(rede) ? list.filter((r) => r !== rede) : [...list, rede];
+    setList(next);
   }
 
   if (loading) {
@@ -488,7 +491,7 @@ export default function BahiaArea({ numNota }: { numNota: string }) {
           </label>
           {mostrarSabe && todasRedesSabe.map((r) => (
             <label key={r} className="bahia-filtro-rede">
-              <input type="checkbox" checked={redesSabe.includes(r)} onChange={() => toggleRede(redesSabe, setRedesSabe, r)} />
+              <input type="checkbox" checked={redesSabe.includes(r)} onChange={() => toggleRede(redesSabe, setRedesSabeOverride, r)} />
               {" "}{r}
             </label>
           ))}
@@ -501,12 +504,12 @@ export default function BahiaArea({ numNota }: { numNota: string }) {
           </label>
           {mostrarSaeb && todasRedesSaeb.map((r) => (
             <label key={r} className="bahia-filtro-rede">
-              <input type="checkbox" checked={redesSaeb.includes(r)} onChange={() => toggleRede(redesSaeb, setRedesSaeb, r)} />
+              <input type="checkbox" checked={redesSaeb.includes(r)} onChange={() => toggleRede(redesSaeb, setRedesSaebOverride, r)} />
               {" "}{r}
             </label>
           ))}
           {mostrarSaeb && todosTiposSaeb.length > 1 && (
-            <select className="form-select form-select-sm" style={{ width: "auto" }} value={tipoSaeb} onChange={(e) => setTipoSaeb(e.target.value)}>
+            <select className="form-select form-select-sm" style={{ width: "auto" }} value={tipoSaeb} onChange={(e) => setTipoSaebOverride(e.target.value)}>
               {todosTiposSaeb.map((t) => <option key={t} value={t}>{t}</option>)}
             </select>
           )}

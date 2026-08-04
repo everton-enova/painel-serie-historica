@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { chamarScript, postScript } from "@/lib/scriptApi";
 
 // GET /api/notas                     → lista as notas salvas (pasta do Drive)
+// GET /api/notas?lixeira=1           → lista notas na lixeira
 // GET /api/notas?id=...&autor=...     → abre uma nota e reserva a edição p/ o autor
 export async function GET(request: NextRequest) {
   try {
     const id = request.nextUrl.searchParams.get("id");
     const autor = request.nextUrl.searchParams.get("autor") || "";
-    const dados = id ? await chamarScript("abrir", { id, autor }) : await chamarScript("recentes");
+    const lixeira = request.nextUrl.searchParams.get("lixeira");
+    const dados = id
+      ? await chamarScript("abrir", { id, autor })
+      : lixeira
+        ? await chamarScript("lixeira")
+        : await chamarScript("recentes");
     return NextResponse.json(dados);
   } catch (err) {
     return NextResponse.json(
@@ -18,6 +24,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/notas  body { acao: "salvar", payload } | { acao: "excluir", id }
+//                       | { acao: "restaurar", id } | { acao: "excluirDefinitivo", id }
 //                       | { acao: "editando" | "liberar", id, autor }
 export async function POST(request: NextRequest) {
   try {
@@ -27,6 +34,12 @@ export async function POST(request: NextRequest) {
     }
     if (body.acao === "excluir") {
       return NextResponse.json(await postScript({ fn: "excluir", id: body.id }));
+    }
+    if (body.acao === "restaurar") {
+      return NextResponse.json(await postScript({ fn: "restaurar", id: body.id }));
+    }
+    if (body.acao === "excluirDefinitivo") {
+      return NextResponse.json(await postScript({ fn: "excluirDefinitivo", id: body.id }));
     }
     // Heartbeat / liberação da trava de edição
     if (body.acao === "editando" || body.acao === "liberar") {

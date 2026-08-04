@@ -66,6 +66,12 @@ export function aplicarCorTexto(editor: HTMLElement, cor: string) {
 }
 
 export async function inserirTabela(editor: HTMLElement) {
+  const sel = window.getSelection();
+  let savedRange: Range | null = null;
+  if (sel && sel.rangeCount && editor.contains(sel.anchorNode)) {
+    savedRange = sel.getRangeAt(0).cloneRange();
+  }
+
   const confirmou = await popupPrompt("Inserir Tabela", "Defina as dimensões da tabela", [
     { id: "linhas", label: "Linhas", placeholder: "3", valor: "3" },
     { id: "colunas", label: "Colunas", placeholder: "3", valor: "3" },
@@ -92,8 +98,15 @@ export async function inserirTabela(editor: HTMLElement) {
   }
   html += "</tbody></table><p><br></p>";
 
-  document.execCommand("insertHTML", false, html);
   editor.focus();
+  if (savedRange) {
+    const s = window.getSelection();
+    if (s) {
+      s.removeAllRanges();
+      s.addRange(savedRange);
+    }
+  }
+  document.execCommand("insertHTML", false, html);
 }
 
 export function setupKeyboardShortcuts(editor: HTMLElement): () => void {

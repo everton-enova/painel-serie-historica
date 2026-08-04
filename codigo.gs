@@ -43,6 +43,7 @@ function doGet(e) {
         case 'bahia': return jsonResponse(buscarDadosBahia());
         case 'regionais': return jsonResponse(listarRegionais());
         case 'recentes': return jsonResponse(listarNotasSalvas());
+        case 'lixeira': return jsonResponse(listarLixeira());
         case 'abrir': return jsonResponse(abrirNota(p.id, p.autor));
         case 'sabeEstado': return jsonResponse(sabeEstadoFlat());
         case 'diagnostico': return jsonResponse(diagnosticoDrive());
@@ -80,6 +81,8 @@ function doPost(e) {
     var fn = String(body.fn || '');
     if (fn === 'salvar') return jsonResponse(salvarNota(body.payload || {}));
     if (fn === 'excluir') return jsonResponse(excluirNota(body.id));
+    if (fn === 'restaurar') return jsonResponse(restaurarNota(body.id));
+    if (fn === 'excluirDefinitivo') return jsonResponse(excluirDefinitivo(body.id));
     if (fn === 'editando') return jsonResponse(renovarEdicao(body.id, body.autor));
     if (fn === 'liberar') return jsonResponse(liberarEdicao(body.id, body.autor));
     return jsonResponse({ erro: 'Função POST desconhecida: ' + fn });
@@ -730,6 +733,11 @@ function listarNotasSalvas() {
   var it = pastas.html.getFiles();
   while (it.hasNext()) {
     var f = it.next();
+    // Ignora notas na lixeira (soft-delete)
+    try {
+      var descRaw = JSON.parse(f.getDescription() || '{}');
+      if (descRaw.lixeiraEm) continue;
+    } catch (e) {}
     var meta = _metaNota(f);
     out.push({
       id: f.getId(),
@@ -875,11 +883,84 @@ function liberarEdicao(id, autor) {
   return { sucesso: true };
 }
 
+// Soft-delete: marca a nota com lixeiraEm nos metadados em vez de excluir.
+// A purga automática (7 dias) roda ao listar a lixeira.
+var DIAS_LIXEIRA = 7;
+
 function excluirNota(id) {
+  try {
+    var file = DriveApp.getFileById(String(id));
+    if (file.isTrashed()) return { erro: 'Nota não encontrada.' };
+    var meta = {};
+    try { meta = JSON.parse(file.getDescription() || '{}'); } catch (e) {}
+    meta.lixeiraEm = new Date().toISOString();
+    file.setDescription(JSON.stringify(meta));
+    // Prefixo visual no nome para não confundir no Drive
+    var nome = file.getName();
+    if (!nome.startsWith('[LIXEIRA] ')) file.setName('[LIXEIRA] ' + nome);
+    return { sucesso: true };
+  } catch (e) {
+    return { erro: 'Nota não encontrada: ' + e.message };
+  }
+}
+
+function restaurarNota(id) {
+  try {
+    var file = DriveApp.getFileById(String(id));
+    if (file.isTrashed()) return { erro: 'Nota não encontrada.' };
+    var meta = {};
+    try { meta = JSON.parse(file.getDescription() || '{}'); } catch (e) {}
+    delete meta.lixeiraEm;
+    file.setDescription(JSON.stringify(meta));
+    var nome = file.getName().replace(/^\[LIXEIRA\] /, '');
+    file.setName(nome);
+    return { sucesso: true };
+  } catch (e) {
+    return { erro: 'Erro ao restaurar: ' + e.message };
+  }
+}
+
+function excluirDefinitivo(id) {
   try {
     DriveApp.getFileById(String(id)).setTrashed(true);
     return { sucesso: true };
   } catch (e) {
     return { erro: 'Nota não encontrada: ' + e.message };
   }
+}
+
+function listarLixeira() {
+  var pastas = _pastasNotas();
+  var out = [];
+  var agora = new Date().getTime();
+  var limite = DIAS_LIXEIRA * 24 * 60 * 60 * 1000;
+  var it = pastas.html.getFiles();
+  while (it.hasNext()) {
+    var f = it.next();
+    if (f.isTrashed()) continue;
+    var meta = {};
+    try { meta = JSON.parse(f.getDescription() || '{}'); } catch (e) {}
+    if (!meta.lixeiraEm) continue;
+    // Purga automática: expirou os 7 dias → apaga de verdade
+    var deletadoEm = new Date(meta.lixeiraEm).getTime();
+    if (agora - deletadoEm > limite) {
+      try { f.setTrashed(true); } catch (e) {}
+      continue;
+    }
+    var diasRestantes = Math.ceil((limite - (agora - deletadoEm)) / (24 * 60 * 60 * 1000));
+    out.push({
+      id: f.getId(),
+      titulo: String(f.getName()).replace(/^\[LIXEIRA\] /, '').replace(/\.html?$/i, ''),
+      tipo: String(meta.tipo || '-'),
+      entidade: String(meta.entidade || '-'),
+      numero: String(meta.numero || ''),
+      autor: String(meta.autor || '-'),
+      excluidoEm: _fmtData(new Date(meta.lixeiraEm)),
+      diasRestantes: diasRestantes,
+      _ts: deletadoEm
+    });
+  }
+  out.sort(function(a, b) { return b._ts - a._ts; });
+  for (var i = 0; i < out.length; i++) delete out[i]._ts;
+  return out;
 }
