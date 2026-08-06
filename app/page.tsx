@@ -273,6 +273,20 @@ export default function Home() {
     } else if (modoAtual === "bahia") {
       const el = document.getElementById("conteudoNotaBahia");
       if (el) {
+        const canvases = el.querySelectorAll("canvas");
+        const swaps: { canvas: HTMLCanvasElement; img: HTMLImageElement }[] = [];
+        canvases.forEach((c) => {
+          try {
+            const img = document.createElement("img");
+            img.src = c.toDataURL("image/png");
+            img.style.cssText = window.getComputedStyle(c).cssText;
+            img.style.width = c.style.width || c.offsetWidth + "px";
+            img.style.height = c.style.height || c.offsetHeight + "px";
+            img.style.maxWidth = "100%";
+            c.parentNode?.replaceChild(img, c);
+            swaps.push({ canvas: c, img });
+          } catch (_) { /* canvas tainted — ignora */ }
+        });
         payload = {
           id: notaAbertaId,
           titulo: `NT-${num || "___"}_${ANO_NOTA}/CAV - Resultado do ${rotuloAvaliacoes(
@@ -285,6 +299,7 @@ export default function Home() {
           autor: usuarioLogado || "",
           html: el.innerHTML,
         };
+        swaps.forEach(({ canvas, img }) => img.parentNode?.replaceChild(canvas, img));
       }
     } else if (relatorioVisivel && info) {
       const el = document.getElementById("conteudoNota");
