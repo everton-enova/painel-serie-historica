@@ -1,9 +1,9 @@
 // Nomes das abas da planilha de origem
 export const NOME_ABA_DADOS = "SABE 19 a 25";
-export const NOME_ABA_SAEB = "Saeb 23";
+export const NOME_ABA_SAEB = "Saeb_ESCOLA_SH";
 export const NOME_ABA_COLABORADORES = "Colaboradores";
 export const NOME_ABA_SABE_MUN = "SABE_MUN";
-export const NOME_ABA_SAEB_MUN = "Saeb_MUN";
+export const NOME_ABA_SAEB_MUN = "Saeb_MUN_SH";
 export const NOME_ABA_SAEB_25 = "Saeb 25";
 export const NOME_ABA_SAEB_MUN_25 = "Saeb_MUN_25";
 export const NOME_ABA_SABE_2025 = "SABE 2025";

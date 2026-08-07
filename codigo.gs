@@ -4,7 +4,7 @@
  *
  * Fonte SABE: aba "SABE 19 a 25" (formato longo, coluna TIPO define o nível):
  *   TIPO = ESCOLA | MUNICIPIO | REGIONAL | ESTADO
- * Fonte Saeb: abas "Saeb 23" + "Saeb 25" (escola), "Saeb_MUN" + "Saeb_MUN_25"
+ * Fonte Saeb: abas "Saeb_ESCOLA_SH" + "Saeb 25" (escola), "Saeb_MUN_SH" + "Saeb_MUN_25"
  *   (município) e "Saeb_BAHIA" (estado) — formato largo (IRyy/MATyy/LPyy/MPyy/IDEByy).
  * Login: aba "Colaboradores" (NOME_COLABORADOR | CPF).
  *
@@ -15,8 +15,8 @@
 
 var ABA_SABE = 'SABE 19 a 25';
 var ABA_COLABORADORES = 'Colaboradores';
-var ABAS_SAEB_ESCOLA = ['Saeb 23', 'Saeb 25'];
-var ABAS_SAEB_MUNICIPIO = ['Saeb_MUN', 'Saeb_MUN_25'];
+var ABAS_SAEB_ESCOLA = ['Saeb_ESCOLA_SH', 'Saeb 25'];
+var ABAS_SAEB_MUNICIPIO = ['Saeb_MUN_SH', 'Saeb_MUN_25'];
 var ABA_SAEB_BAHIA = 'Saeb_BAHIA';
 
 // Edições SABE marcadas como preliminares no painel.
@@ -349,7 +349,7 @@ function _blocosSaebDeAba(sheetName, matcher) {
   return out;
 }
 
-// Junta blocos de várias abas (ex.: Saeb 23 + Saeb 25) por etapa|rede.
+// Junta blocos de várias abas (ex.: Saeb_ESCOLA_SH + Saeb 25) por etapa|rede.
 function _mesclarBlocosSaeb(listas) {
   var mapa = {};
   var ordem = [];
