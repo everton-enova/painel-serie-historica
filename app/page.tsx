@@ -189,22 +189,37 @@ export default function Home() {
   }
 
   function imprimirNotaDireta(nota: NotaAberta) {
-    reabrirNota(nota);
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const nome = nomeArquivoNota(nota.numero, nota.titulo);
-        if (nome) {
-          const tituloOriginal = document.title;
-          document.title = nome;
-          const restaurar = () => {
-            document.title = tituloOriginal;
-            window.removeEventListener("afterprint", restaurar);
-          };
-          window.addEventListener("afterprint", restaurar);
-        }
-        window.print();
-      }, 300);
-    });
+    const nome = nomeArquivoNota(nota.numero, nota.titulo);
+    const css =
+      'body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#333;margin:24px;}' +
+      'table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:10px;}' +
+      'th{background:#002060;color:#fff;padding:6px 5px;text-align:center;font-size:8pt;}' +
+      'td{padding:6px 5px;border-bottom:1px solid #e0e0e0;text-align:center;}' +
+      '.section-title{font-size:10pt;font-weight:bold;color:#002060;text-transform:uppercase;border-bottom:1px solid #ddd;padding-bottom:5px;margin:20px 0 10px;}' +
+      '.school-card{background:#f8f9fa;border-left:5px solid #002060;padding:12px;margin-bottom:20px;}' +
+      '.school-name{font-size:11pt;font-weight:bold;text-transform:uppercase;}' +
+      '.analysis-box{font-size:9.5pt;line-height:1.5;text-align:justify;margin-bottom:12px;}' +
+      '.header-title{font-size:16pt;font-weight:bold;color:#002060;text-transform:uppercase;}' +
+      '.header-meta{font-size:8pt;color:#666;}' +
+      '.badge-nivel{padding:2px 6px;border-radius:10px;font-size:7.5pt;}' +
+      '.footer-mini{font-size:7pt;color:#999;text-align:center;margin-top:20px;}' +
+      'img{max-width:100%;}' +
+      '@page{size:A4;margin:15mm;}' +
+      '*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}';
+    const html =
+      '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+      `<title>${nome || "Nota"}</title>` +
+      `<style>${css}</style>` +
+      '</head><body>' + nota.html + '</body></html>';
+    const w = window.open("", "_blank");
+    if (!w) {
+      popupAlerta("Erro", "O navegador bloqueou a janela de impressão. Permita popups para este site.", "error");
+      return;
+    }
+    w.document.write(html);
+    w.document.close();
+    w.addEventListener("afterprint", () => w.close());
+    setTimeout(() => w.print(), 400);
   }
 
   // Rótulo das avaliações presentes na nota, para o título salvo:
