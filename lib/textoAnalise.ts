@@ -27,21 +27,24 @@ export function gerarTextoAnaliseSaeb(etapa: string, rede: string, atual: AnoSae
   const idebAtual = parseFloat(String(atual.ideb));
   const idebAnt = anterior ? parseFloat(String(anterior.ideb)) : NaN;
 
+  const anoAtual = atual.ano;
+  const anoAnt = anterior?.ano;
+
   let texto = `A rede ${rede}, na etapa ${etapa}, `;
   if (!isNaN(idebAtual)) {
-    texto += `apresentou em 2023 um Ideb de ${formatar(idebAtual, 1)}. `;
-    if (!isNaN(idebAnt)) {
+    texto += `apresentou em ${anoAtual} um Ideb de ${formatar(idebAtual, 1)}. `;
+    if (!isNaN(idebAnt) && anoAnt) {
       const diff = idebAtual - idebAnt;
       if (diff > 0) {
-        texto += `Comparado a 2021 (${formatar(idebAnt, 1)}), houve crescimento de ${formatar(diff, 1)} ponto(s).`;
+        texto += `Comparado a ${anoAnt} (${formatar(idebAnt, 1)}), houve crescimento de ${formatar(diff, 1)} ponto(s).`;
       } else if (diff < 0) {
-        texto += `Comparado a 2021 (${formatar(idebAnt, 1)}), houve redução de ${formatar(Math.abs(diff), 1)} ponto(s).`;
+        texto += `Comparado a ${anoAnt} (${formatar(idebAnt, 1)}), houve redução de ${formatar(Math.abs(diff), 1)} ponto(s).`;
       } else {
-        texto += `O resultado manteve-se estável em relação a 2021.`;
+        texto += `O resultado manteve-se estável em relação a ${anoAnt}.`;
       }
     }
   } else {
-    texto += `não teve seu Ideb calculado em 2023.`;
+    texto += `não teve seu Ideb calculado em ${anoAtual}.`;
   }
   return texto;
 }
