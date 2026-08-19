@@ -274,10 +274,11 @@ export default function Home() {
     } else if (modoAtual === "documento") {
       const el = document.getElementById("docEditorPage");
       const assunto = document.getElementById("docTituloEditavel")?.textContent?.trim() || "DOCUMENTO";
+      const titulo = nomeArquivoNota(numDoc, `RESULTADO_SABE_SAEB_${assunto}`);
       if (el) {
         payload = {
           id: notaAbertaId,
-          titulo: `${assunto} ${numDoc.trim() || "___"}/${ANO_NOTA}`,
+          titulo,
           tipo: "documento",
           numero: numDoc.trim(),
           entidade: "-",
@@ -385,8 +386,8 @@ export default function Home() {
       return nomeArquivoNota(snapshot.numero, snapshot.titulo);
     }
     if (modoAtual === "documento") {
-      const assunto = document.getElementById("docTituloEditavel")?.textContent ?? "";
-      return nomeArquivoNota(numDoc, assunto);
+      const assunto = document.getElementById("docTituloEditavel")?.textContent?.trim() || "DOCUMENTO";
+      return nomeArquivoNota(numDoc, `RESULTADO_SABE_SAEB_${assunto}`);
     }
     if (modoAtual === "bahia") {
       const assunto = document.getElementById("bahiaTituloNota")?.textContent ?? "";

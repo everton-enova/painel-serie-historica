@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { aplicarCorTexto, aplicarTamanhoFonte, CORES_TEXTO, execCmd, execFormatBlock, inserirTabela, setupKeyboardShortcuts, TAMANHOS_FONTE } from "@/lib/documentoEditor";
 import LogoUpload from "./LogoUpload";
+import { nomeArquivoNota } from "@/lib/formatters";
 
 interface DocumentoAreaProps {
   usuarioLogado: string;
@@ -361,14 +362,12 @@ export default function DocumentoArea({ usuarioLogado, dataFormatada, numDoc }: 
           <LogoUpload />
           <div className="header-info">
             <div style={{ display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
-              <h1 className="doc-title-editable" id="docTituloEditavel" contentEditable spellCheck suppressContentEditableWarning>
-                DOCUMENTO
-              </h1>
-              {numDoc && (
-                <span style={{ fontSize: "16pt", fontWeight: 800, color: "var(--primary-color)" }}>
-                  Nº {numDoc}/2026
+              <h1 className="doc-title-editable">
+                {nomeArquivoNota(numDoc, "RESULTADO_SABE_SAEB_")}
+                <span id="docTituloEditavel" contentEditable spellCheck suppressContentEditableWarning>
+                  DOCUMENTO
                 </span>
-              )}
+              </h1>
             </div>
             <div className="header-meta">
               <div>
