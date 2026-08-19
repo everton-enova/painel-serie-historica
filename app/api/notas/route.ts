@@ -23,6 +23,27 @@ export async function GET(request: NextRequest) {
   }
 }
 
+function ajustarTituloResultado(payload: Record<string, unknown>) {
+  const tipo = String(payload.tipo || "");
+  if (!['escola', 'municipio', 'regional'].includes(tipo)) return payload;
+
+  const entidade = String(payload.entidade || "").trim();
+  if (!entidade) return payload;
+
+  const tituloAtual = String(payload.titulo || "").trim();
+  const separador = " - ";
+  const posicaoSeparador = tituloAtual.indexOf(separador);
+  const prefixo =
+    posicaoSeparador >= 0
+      ? tituloAtual.slice(0, posicaoSeparador + separador.length)
+      : `NT-${String(payload.numero || "___").trim() || "___"}_2026/CAV - `;
+
+  return {
+    ...payload,
+    titulo: `${prefixo}RESULTADO_SABE_SAEB_${entidade}`,
+  };
+}
+
 // POST /api/notas  body { acao: "salvar", payload } | { acao: "excluir", id }
 //                       | { acao: "restaurar", id } | { acao: "excluirDefinitivo", id }
 //                       | { acao: "editando" | "liberar", id, autor }
@@ -30,7 +51,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     if (body.acao === "salvar") {
-      return NextResponse.json(await postScript({ fn: "salvar", payload: body.payload }));
+      const payload = ajustarTituloResultado(body.payload || {});
+      return NextResponse.json(await postScript({ fn: "salvar", payload }));
     }
     if (body.acao === "excluir") {
       return NextResponse.json(await postScript({ fn: "excluir", id: body.id }));
