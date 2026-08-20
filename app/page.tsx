@@ -189,7 +189,7 @@ export default function Home() {
   }
 
   function imprimirNotaDireta(nota: NotaAberta) {
-    const nome = nomeArquivoNota(nota.numero, nota.titulo);
+    const nome = nota.titulo?.trim() || nomeArquivoNota(nota.numero, nota.entidade);
     const css =
       'body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#333;margin:24px;}' +
       'table{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:10px;}' +
@@ -322,7 +322,7 @@ export default function Home() {
       if (el) {
         payload = {
           id: notaAbertaId,
-          titulo: `NT-${num || "___"}_${ANO_NOTA}/CAV - Resultado do ${rotuloAvaliacoes(checkSabe, checkSaeb)} - ${info.nome}`,
+          titulo: nomeArquivoNota(num, `RESULTADO_SABE_SAEB_${info.nome}`),
           tipo: modoAtual,
           numero: num,
           entidade: String(info.nome),
@@ -383,7 +383,7 @@ export default function Home() {
 
   function nomeArquivoImpressao(): string | null {
     if (snapshot) {
-      return nomeArquivoNota(snapshot.numero, snapshot.titulo);
+      return snapshot.titulo?.trim() || nomeArquivoNota(snapshot.numero, snapshot.entidade);
     }
     if (modoAtual === "documento") {
       const assunto = document.getElementById("docTituloEditavel")?.textContent?.trim() || "DOCUMENTO";
@@ -394,7 +394,7 @@ export default function Home() {
       return nomeArquivoNota(numNota, assunto);
     }
     if (relatorioVisivel && info) {
-      return nomeArquivoNota(numNota, String(info.nome));
+      return nomeArquivoNota(numNota, `RESULTADO_SABE_SAEB_${String(info.nome)}`);
     }
     return null;
   }

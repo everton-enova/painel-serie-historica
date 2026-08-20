@@ -661,7 +661,8 @@ function salvarNota(payload) {
 
   var pastas = _pastasNotas();
   var titulo = String(payload.titulo || 'NOTA').trim();
-  var nomeBase = titulo.replace(/[\\\/:*?"<>|]/g, '-');
+  // O Google Drive aceita "/" no nome; preserva "/CAV" do padrão oficial.
+  var nomeBase = titulo.replace(/[\\:*?"<>|]/g, '-');
   var docHtml = _docCompletoNota(titulo, payload.html);
   var meta = JSON.stringify({
     tipo: payload.tipo || '-',
